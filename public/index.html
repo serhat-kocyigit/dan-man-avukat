@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HakPortal – İşçi Haklarınız, Güvende</title>
+    <meta name="description"
+        content="İşten mi çıkarıldınız? Kıdem, ihbar ve alacaklarınızı saniyeler içinde hesaplayın. Şehrinizden avukat teklifleri alın." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>" />
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">⚖️</span>
+                <span class="logo-text">Hak<span class="logo-accent">Portal</span></span>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <a href="/#hesaplama" class="nav-link">Hesaplama</a>
+                <a href="/blog" class="nav-link">Blog</a>
+                <a href="/avukat" class="nav-link">Avukat Başvuru</a>
+                <a href="/giris" class="nav-btn-outline" id="navGirisBtn">Giriş Yap</a>
+                <a href="/kayit" class="nav-btn-primary" id="navKayitBtn">Ücretsiz Başla</a>
+                <button class="nav-btn-outline" id="navPanelBtn" style="display:none" onclick="goPanel()">Panel</button>
+                <button class="nav-btn-outline nav-btn-danger" id="navCikisBtn" style="display:none"
+                    onclick="logout()">Çıkış</button>
+            </div>
+            <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section class="hero" id="home">
+        <div class="hero-bg">
+            <div class="hero-orb orb-1"></div>
+            <div class="hero-orb orb-2"></div>
+            <div class="hero-orb orb-3"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                Türkiye'nin İşçi Hakları Platformu
+            </div>
+            <h1 class="hero-title">
+                İşten Çıkarıldın mı?<br />
+                <span class="hero-highlight">Ne Kadar Alacağın</span><br />
+                30 Saniyede Hesapla.
+            </h1>
+            <p class="hero-subtitle">
+                Kıdem, ihbar ve diğer alacaklarını güncel Yargıtay standartlarında ücretsiz hesapla.
+                Dava dosyanı oluşturup şehrindeki avukatlardan anında teklif al.
+                Sadece 99 ₺ güven bedeliyle yasal sürecini hızla başlat!
+            </p>
+            <div class="hero-cta">
+                <a href="#hesaplama" class="btn-primary btn-lg" id="heroHesaplaBtn">
+                    <span>Hesaplamaya Başla</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </a>
+                <a href="#nasil-calisir" class="btn-ghost btn-lg">Nasıl Çalışır?</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="counterHesaplama">0</span>
+                    <span class="stat-label">Hesaplama Yapıldı</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number" id="counterDava">0</span>
+                    <span class="stat-label">Tamamlanan Dava</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number">%100</span>
+                    <span class="stat-label">Ücretsiz</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number">3 dk.</span>
+                    <span class="stat-label">Ortalama Süre</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="calc-preview">
+                <div class="calc-header">
+                    <div class="calc-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <span>Kıdem Hesaplama</span>
+                </div>
+                <div class="calc-body">
+                    <div class="calc-row">
+                        <span class="calc-label">Çalışma Süresi</span>
+                        <span class="calc-value">4 Yıl, 3 Ay</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">Kıdem Tazminatı</span>
+                        <span class="calc-value green">₺87.640</span>
+                    </div>
+                    <div class="calc-row">
+                        <span class="calc-label">İhbar Tazminatı</span>
+                        <span class="calc-value green">₺18.200</span>
+                    </div>
+                    <div class="calc-divider"></div>
+                    <div class="calc-row total">
+                        <span class="calc-label">Tahmini Toplam</span>
+                        <span class="calc-value">₺105.840</span>
+                    </div>
+                    <div class="calc-cta-mini" onclick="window.location.href='#hesaplama'" style="cursor:pointer">⚖️
+                        Dosyanı Avukatlara Çıkar →</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ALACAK TÜRLERİ KARTI -->
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title">Hangi Haklarınızı Hesaplıyoruz?</h2>
+            <p class="section-subtitle">Türk İş Kanunu'na göre tüm temel işçi alacakları</p>
+            <div class="features-grid">
+                <div class="feature-card active-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Kıdem Tazminatı</h3>
+                    <p>Her yıl için 30 günlük brüt ücret. Kıdem tavanı uygulanır.</p>
+                </div>
+                <div class="feature-card active-card">
+                    <div class="feature-icon">📅</div>
+                    <h3>İhbar Tazminatı</h3>
+                    <p>2-8 haftalık ihbar süresi. Çalışma sürenize göre otomatik hesaplanır.</p>
+                </div>
+                <div class="feature-card active-card">
+                    <div class="feature-icon">⏰</div>
+                    <h3>Fazla Mesai</h3>
+                    <p>Haftada 45 saati aşan çalışmalar için tam korumalı ücret hesabı.</p>
+                </div>
+                <div class="feature-card active-card">
+                    <div class="feature-icon">🏖️</div>
+                    <h3>Yıllık İzin Ücreti</h3>
+                    <p>Kullanılmamış yıllık izin günlerinin son maaştan ücret karşılığı.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HESAPLAMA MOTORU -->
+    <style>
+        /* Sadece Ana Safya İçin Hesaplama Düzeni */
+        #hesaplama .container {
+            max-width: 100% !important;
+            padding-left: 70px !important;
+            padding-right: 70px !important;
+        }
+
+        #homeCalcWrapper {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+            max-width: 800px !important;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            #hesaplama .container {
+                padding-left: 20px !important;
+                padding-right: 20px !important;
+            }
+
+            #homeCalcWrapper {
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
+            }
+
+            .features-grid,
+            .blog-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+    <section class="calc-section" id="hesaplama">
+        <div class="container">
+
+            <!-- ÖN DEĞERLENDİRME TESTİ -->
+            <div id="homePreTestContainer"
+                style="max-width:600px; margin:0 auto 40px auto; padding:40px; border-radius:16px; background:var(--bg-surface); text-align:center; border:1px solid var(--border); box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+                <div style="font-size:3rem; margin-bottom:15px;">🔍</div>
+                <h2 style="margin-bottom:12px; font-weight:700; font-size:1.5rem;">Ön Değerlendirme Testi</h2>
+                <p style="color:var(--text-secondary); margin-bottom:28px; line-height:1.6; font-size:0.95rem;">
+                    Hak durumunuzu 30 saniyede anlayın. 3 soruyu yanıtlayın, sisteme girin.
+                </p>
+                <div class="form-group" style="text-align:left; margin-bottom:18px;">
+                    <label class="form-label" style="font-weight:600;">İşten kim çıkardı?</label>
+                    <select id="hmpKimCikardi" class="form-select" style="padding:12px; font-size:0.95rem; width:100%;">
+                        <option value="">Lütfen seçiniz...</option>
+                        <option value="ben">Ben kendi isteğimle (istifa ederek) ayrıldım</option>
+                        <option value="isveren">İşveren (Patron) işime son verdi</option>
+                        <option value="anlasma">Anlaşarak / ikale ile ayrıldık</option>
+                        <option value="diger">Askerlik / Emeklilik / Evlilik sebebiyle ayrıldım</option>
+                    </select>
+                </div>
+                <div class="form-group" style="text-align:left; margin-bottom:18px;">
+                    <label class="form-label" style="font-weight:600;">Aynı işyerinde kaç yıl çalıştınız?</label>
+                    <select id="hmpSure" class="form-select" style="padding:12px; font-size:0.95rem; width:100%;">
+                        <option value="">Lütfen seçiniz...</option>
+                        <option value="az">6 aydan daha az</option>
+                        <option value="orta">6 ay – 1 yıl arası</option>
+                        <option value="cok">1 yıldan fazla (Uzun süreli)</option>
+                    </select>
+                </div>
+                <div class="form-group" style="text-align:left; margin-bottom:28px;">
+                    <label class="form-label" style="font-weight:600;">Maaşınız yaklaşık ne kadardı?</label>
+                    <select id="hmpMaas" class="form-select" style="padding:12px; font-size:0.95rem; width:100%;">
+                        <option value="">Lütfen seçiniz...</option>
+                        <option value="alti">Asgari ücretin altındaydı</option>
+                        <option value="ustu">Asgari ücret veya daha üzerindeydi</option>
+                    </select>
+                </div>
+                <button class="btn-primary"
+                    style="width:100%; padding:14px; font-size:1rem; font-weight:600; border-radius:10px;"
+                    onclick="window.evaluateHomePreTest()">
+                    Testi Tamamla ve Hesaplamaya Geç ➔
+                </button>
+            </div>
+
+            <!-- GERÇEK HESAPLAMA FORMU (ön test sonrası açılır) -->
+            <div id="homeCalcWrapper" class="calc-wrapper" style="display:none;">
+                <div class="calc-form-side" style="min-height:520px; overflow:hidden;">
+                    <h2 class="calc-form-title">
+                        <span>&#x2696;&#xFE0F;</span> Tazminat Hesaplama
+                    </h2>
+                    <p class="calc-form-subtitle">Bilgilerinizi girin, an&#x131;nda hesaplayal&#x131;m.</p>
+
+                    <form id="hesaplamaForm" autocomplete="off">
+                        <!-- 🔥 AKILLI DAVA ASİSTANI (WIZARD) START -->
+                        <div class="form-group"
+                            style="background:var(--bg-surface); padding:15px; border-radius:10px; border:1px solid var(--border); margin-bottom:20px;">
+                            <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:1.2rem;">🤖</span>
+                                <div>
+                                    <h4 style="margin:0; font-size:1rem; color:var(--primary);">Akıllı Karar Asistanı
+                                    </h4>
+                                    <span style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">Sizi
+                                        adım adım yönlendirerek hukuki senaryonuzu çıkaracağız.</span>
+                                </div>
+                            </label>
+
+                            <div id="aiWizardContainer" style="margin-top:15px;">
+                                <!-- Dinamik Sorular Buraya Gelecek -->
+                            </div>
+
+                            <!-- API Geriye Dönük Uyumluluk ve Seçim Deposu -->
+                            <input type="hidden" id="cikisSekli" value="" required>
+                            <input type="hidden" id="aiFacts" value="{}">
+                        </div>
+                        <!-- 🔥 AKILLI DAVA ASİSTANI (WIZARD) END -->
+
+                        <div class="form-row">
+                            <!-- İşe Giriş -->
+                            <div class="form-group">
+                                <label class="form-label">İşe Giriş Tarihi <span class="required">*</span></label>
+                                <input type="date" class="form-input" id="isGirisTarihi" required />
+                            </div>
+                            <!-- İşten Çıkış -->
+                            <div class="form-group">
+                                <label class="form-label">İşten Çıkış Tarihi <span class="required">*</span></label>
+                                <input type="date" class="form-input" id="isCikisTarihi" required />
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <!-- Brüt Maaş -->
+                            <div class="form-group">
+                                <label class="form-label">Aylık Brüt Maaş (₺) <span class="required">*</span></label>
+                                <div class="input-with-icon">
+                                    <span class="input-icon">₺</span>
+                                    <input type="number" class="form-input with-icon" id="brutMaas"
+                                        placeholder="Örn: 25000" min="1" required />
+                                </div>
+                            </div>
+                            <!-- Yan Haklar -->
+                            <div class="form-group">
+                                <label class="form-label">Aylık Yan Haklar (₺)</label>
+                                <div class="input-with-icon">
+                                    <span class="input-icon">₺</span>
+                                    <input type="number" class="form-input with-icon" id="yanHaklar"
+                                        placeholder="Yemek, yol vb." min="0" />
+                                </div>
+                            </div>
+                        </div>
+                        <p
+                            style="font-size: 0.75rem; color: var(--text-muted); margin-top: -10px; margin-bottom: 15px;">
+                            * Tazminatlar <strong>Giydirilmiş Brüt Ücret</strong> üzerinden hesaplanır (Maaş + Yan
+                            Hakların Toplamı).
+                        </p>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Kullanılmayan İzin (Gün)</label>
+                                <input type="number" class="form-input" id="kullanilmayanIzin" placeholder="Örn: 14"
+                                    min="0" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Fazla Mesai (Saat)</label>
+                                <input type="number" class="form-input" id="fazlaMesai" placeholder="Örn: 50" min="0" />
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Ödenmemiş Maaş (Gün)</label>
+                                <input type="number" class="form-input" id="odenmemisMaasGun"
+                                    placeholder="İçeride kalan maaş gün sayısı" min="0" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Kümülatif Vergi Matrahı (₺)</label>
+                                <input type="number" class="form-input" id="kumulatifMatrah"
+                                    placeholder="Yoksa 0 bırakın" min="0" />
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary btn-block" id="hesaplaBtn">
+                            <span id="hesaplaBtnText">Hesapla →</span>
+                            <span id="hesaplaSpinner" class="spinner" style="display:none"></span>
+                        </button>
+                    </form>
+                </div><!-- /.calc-form-side -->
+
+                <!-- SONUÇ PANELİ -->
+                <div class="calc-result-side" id="calcResultSide" style="display:none; min-width:0; flex:1;">
+                    <div class="result-header">
+                        <h3>📊 Hesaplama Sonucu</h3>
+                        <span class="result-badge">TAHMİNİ</span>
+                    </div>
+                    <div id="resultSure"></div>
+                    <div id="resultCards"></div>
+                    <div id="resultTotal"></div>
+                    <div class="result-actions">
+                        <button class="btn-primary btn-block" id="avukatTeklifBtn" onclick="avukatTeklifAl()"
+                            style="display:none">
+                            <span>⚖️ Avukatlardan Teklif Al</span>
+                        </button>
+                        <button class="btn-ghost btn-block" onclick="resetForm()">Yeniden Hesapla</button>
+                    </div>
+                </div><!-- /.calc-result-side -->
+
+            </div><!-- /#homeCalcWrapper -->
+
+        </div><!-- /.container -->
+    </section>
+
+
+    <!-- NASIL ÇALIŞIR -->
+    <section class="how-section" id="nasil-calisir">
+        <div class="container">
+            <h2 class="section-title">Nasıl Çalışır?</h2>
+            <p class="section-subtitle">4 adımda haklarınıza kavuşun</p>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">🧮</div>
+                    <h3>Hesapla</h3>
+                    <p>Maaş ve tarih bilgilerinizi yapay zeka destekli motorumuza girerek net haklarınızı hesaplayın.
+                    </p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step-card">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">📋</div>
+                    <h3>Teklif Al & Seç</h3>
+                    <p>Dosyanızı sistemdeki avukatlara isimsiz sunun ve gelen teklifler arasından en uygununu seçin.</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step-card">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">🛡️</div>
+                    <h3>Güvence Bedeli</h3>
+                    <p>Siz sadece (99₺) güven bedelini ödeyip vekalet sürecini başlatın, gerisini avukatınız platforma
+                        ödeyecektir.</p>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step-card">
+                    <div class="step-number">04</div>
+                    <div class="step-icon">💬</div>
+                    <h3>Dava ve İletişim</h3>
+                    <p>Kabul işleminden sonra mesajlaşma açılır, belgeleri yükleyin ve kapandıktan sonra avukatınızı
+                        değerlendirin!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BLOG / SEO -->
+    <section class="blog-section">
+        <div class="container">
+            <h2 class="section-title">İşçi Hakları Rehberi</h2>
+            <p class="section-subtitle">Haklarınızı öğrenin, bilinçli kararlar alın</p>
+            <div class="blog-grid">
+                <article class="blog-card">
+                    <div class="blog-emoji">📖</div>
+                    <div class="blog-tag">Kıdem</div>
+                    <h3>Kıdem Tazminatı Nedir? Kimler Alabilir?</h3>
+                    <p>İş Kanunu'na göre kıdem tazminatının tüm şartları, hesaplama mantığı ve işçiyi koruyan detaylar.
+                        Aynı işverene bağlı asgari çalışma süresi, tavan sınırları ve kendi isteğiyle ayrılanlar için
+                        yasadaki istisna durumları gibi kritik bilgileri keşfedin.</p>
+                    <a href="#" class="blog-link" onclick="openBlogModal('kidem'); return false;">Devamını Oku →</a>
+                </article>
+                <article class="blog-card">
+                    <div class="blog-emoji">⏱️</div>
+                    <div class="blog-tag">İhbar</div>
+                    <h3>İhbar Süreleri ve Tazminat Hesabı</h3>
+                    <p>İhbar öneli ( Bildirim Süresi ) tam olarak nedir? Çalışma sürenize göre haftalık ihbar
+                        tazminatınızı nasıl
+                        hesaplamalısınız? İşveren veya işçi tarafından sözleşme feshinde uyulması gereken zorunlu
+                        bildirim sürelerini ve hak edildiğinde alınacak parasal karşılığını inceleyin.</p>
+                    <a href="#" class="blog-link" onclick="openBlogModal('ihbar'); return false;">Devamını Oku →</a>
+                </article>
+                <article class="blog-card">
+                    <div class="blog-emoji">🔍</div>
+                    <div class="blog-tag">Hukuk</div>
+                    <h3>İşten Çıkarıldınızda İlk 10 Adım</h3>
+                    <p>Aniden işten çıkarıldığınızda haklarınızı kaybetmemek için panik yapmadan uygulamanız gereken en
+                        kritik hukuki adımlar. İbraname gibi belgeleri imzalamadan önce yapılması gerekenler, SGK çıkış
+                        kodu incelemeleri ve mecburi arabulucuk süreçlerine dair hayati uyarılar.</p>
+                    <a href="#" class="blog-link" onclick="openBlogModal('hukuk'); return false;">Devamını Oku →</a>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <div class="footer-logo">⚖️ HakPortal</div>
+                    <p>Türkiye'de çalışan işçilerin hukuki haklarını öğrenmelerine ve avukat bulmalarına yardımcı olan
+                        dijital platform.</p>
+                    <p class="footer-disclaimer">Platform hukuki danışmanlık sunmaz. Tüm hesaplamalar tahminidir.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Platform</h4>
+                    <ul>
+                        <li><a href="/#hesaplama">Hesaplama</a></li>
+                        <li><a href="/avukat">Avukat Başvuru</a></li>
+                        <li><a href="/giris">Giriş Yap</a></li>
+                        <li><a href="/kayit">Kayıt Ol</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Hukuki</h4>
+                    <ul>
+                        <li><a href="/kvkk">KVKK Aydınlatma</a></li>
+                        <li><a href="/kullanim-sartlari">Kullanım Şartları</a></li>
+                        <li><a href="/gizlilik">Gizlilik Politikası</a></li>
+                        <li><a href="/acik-riza">Açık Rıza Metni</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 HakPortal. Tüm hakları saklıdır.</p>
+                <p>Bu platform bilgilendirme amaçlıdır. Hukuki tavsiye verilmez.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AUTH MODAL -->
+    <div class="modal-overlay" id="authModal" style="display:none">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('authModal')">✕</button>
+            <div class="modal-tabs">
+                <button class="modal-tab active" id="tabGiris" onclick="switchTab('giris')">Giriş Yap</button>
+                <button class="modal-tab" id="tabKayit" onclick="switchTab('kayit')">Kayıt Ol</button>
+            </div>
+            <!-- GİRİŞ FORMU -->
+            <div id="girisForm">
+                <h3 class="modal-title">Hesabınıza Giriş Yapın</h3>
+                <div class="form-group">
+                    <label class="form-label">E-posta</label>
+                    <input type="email" class="form-input" id="loginEmail" placeholder="ornek@email.com" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Şifre</label>
+                    <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" />
+                </div>
+                <div class="modal-error" id="loginError" style="display:none"></div>
+                <button class="btn-primary btn-block" onclick="doLogin()">Giriş Yap</button>
+            </div>
+            <!-- KAYIT FORMU -->
+            <div id="kayitForm" style="display:none">
+                <h3 class="modal-title">Ücretsiz Hesap Oluştur</h3>
+                <div
+                    style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;padding:10px 12px;background:rgba(99,102,241,0.07);border-radius:8px;border-left:3px solid var(--primary)">
+                    <strong>Neden bu bilgileri istiyoruz?</strong> Bilgileriniz avukatlara hiçbir şekilde paylaşılmaz.
+                    Platformun güvenliği ve KVKK uyumu için kullanılır.
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Ad <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="regAd" placeholder="Adınız"
+                            autocomplete="given-name" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Soyad <span class="required">*</span></label>
+                        <input type="text" class="form-input" id="regSoyad" placeholder="Soyadınız"
+                            autocomplete="family-name" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">E-posta <span class="required">*</span></label>
+                    <input type="email" class="form-input" id="regEmail" placeholder="ornek@email.com"
+                        autocomplete="email" />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Telefon <span class="required">*</span></label>
+                        <input type="tel" class="form-input" id="regTelefon" placeholder="05xx xxx xx xx"
+                            autocomplete="tel" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Doğum Tarihi <span class="required">*</span></label>
+                        <input type="date" class="form-input" id="regDogumTarihi" autocomplete="bday" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Şehir <span class="required">*</span></label>
+                    <select class="form-select" id="regSehir">
+                        <option value="">Şehir seçin...</option>
+                        <option>Adana</option>
+                        <option>Ankara</option>
+                        <option>Antalya</option>
+                        <option>Bursa</option>
+                        <option>Diyarbakır</option>
+                        <option>Erzurum</option>
+                        <option>Eskişehir</option>
+                        <option>Gaziantep</option>
+                        <option>İstanbul</option>
+                        <option>İzmir</option>
+                        <option>Kayseri</option>
+                        <option>Kocaeli</option>
+                        <option>Konya</option>
+                        <option>Malatya</option>
+                        <option>Mersin</option>
+                        <option>Samsun</option>
+                        <option>Şanlıurfa</option>
+                        <option>Trabzon</option>
+                        <option>Diğer</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Şifre <span class="required">*</span></label>
+                        <input type="password" class="form-input" id="regPassword" placeholder="En az 8 karakter"
+                            autocomplete="new-password" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Şifre Tekrar <span class="required">*</span></label>
+                        <input type="password" class="form-input" id="regPasswordConfirm"
+                            placeholder="Şifreyi tekrar girin" autocomplete="new-password" />
+                    </div>
+                </div>
+                <div style="margin-bottom:12px">
+                    <label
+                        style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:0.8rem;color:var(--text-secondary)">
+                        <input type="checkbox" id="regKvkk" style="margin-top:2px;flex-shrink:0" />
+                        <span><a href="/kvkk" target="_blank" style="color:var(--primary-light)">KVKK Aydınlatma
+                                Metni</a>'ni ve
+                            <a href="/kullanim-sartlari" target="_blank" style="color:var(--primary-light)">Kullanım
+                                Şartları</a>'nı okudum, kabul ediyorum.</span>
+                    </label>
+                </div>
+                <div class="modal-error" id="regError" style="display:none"></div>
+                <button class="btn-primary btn-block" onclick="doRegister()">Hesap Oluştur →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AVUKAT TEKLİF MODAL -->
+    <div class="modal-overlay" id="teklifModal" style="display:none">
+        <div class="modal modal-lg">
+            <button class="modal-close" onclick="closeModal('teklifModal')">✕</button>
+            <h3 class="modal-title">⚖️ Avukatlardan Teklif Al</h3>
+            <p class="modal-subtitle">Hesapladığınız davanızı şimdi platformdaki yörenizin avukatlarına doğrudan sunun.
+            </p>
+            <div class="form-group">
+                <label class="form-label">Dava Türü</label>
+                <select class="form-select" id="teklifDavaTuru">
+                    <option value="kıdem-ihbar">Kıdem / İhbar Tazminatı</option>
+                    <option value="fazla-mesai">Fazla Mesai</option>
+                    <option value="yillik-izin">Yıllık İzin</option>
+                    <option value="ucret-alacagi">Ücret Alacağı</option>
+                    <option value="diger">Diğer</option>
+                </select>
+            </div>
+            <div class="modal-info-box">
+                <strong>🔒 Güvence:</strong> Şehir bilginiz doğrudan profilinizden tespit edilir. Kişisel ve iletişim
+                verileriniz avukatlara kesinlikle <u>gösterilmez</u>. Sadece karşılıklı onayda ve ödeme yapıldığında
+                açılır.
+            </div>
+            <div class="modal-error" id="teklifError" style="display:none"></div>
+            <button class="btn-primary btn-block" onclick="olusturCase()">Dava Dosyası Oluştur</button>
+        </div>
+    </div>
+
+    <!-- YAZI İÇERİĞİ BLOG MODALI -->
+    <div class="modal-overlay" id="blogModal" style="display:none">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('blogModal')">✕</button>
+            <h3 class="modal-title" id="blogModalTitle"></h3>
+            <div style="max-height: 65vh; overflow-y: auto; padding-right: 15px; margin-top:15px">
+                <p style="white-space: pre-wrap; line-height: 1.7; font-size: 0.95rem; color: var(--text-primary);"
+                    id="blogModalContent"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/legal-engine.js"></script>
+    <script src="/js/hesaplama.js"></script>
+    <script src="/js/auth.js"></script>
+</body>
+
+</html>

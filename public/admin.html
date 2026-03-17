@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Paneli – HakPortal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/panel.css" />
+    <style>
+        /* ===================================================
+           HakPortal Admin Panel — Premium Dark Design v3
+        =================================================== */
+        :root {
+            --admin-accent: #00d9a3;
+            --admin-blue: #60a5fa;
+            --admin-purple: #a78bfa;
+            --admin-orange: #fb923c;
+            --admin-red: #f87171;
+            --admin-yellow: #fbbf24;
+            --admin-green: #34d399;
+            --glow-green: rgba(0, 217, 163, 0.18);
+            --glow-red: rgba(248, 113, 113, 0.18);
+            --glow-blue: rgba(96, 165, 250, 0.18);
+            --glow-yellow: rgba(251, 191, 36, 0.18);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.07);
+        }
+
+        /* === LAYOUT === */
+        .panel-sidebar {
+            width: 230px;
+            min-width: 230px;
+        }
+
+        .panel-sidebar-title {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            padding: 14px 16px 6px;
+        }
+
+        /* === SIDEBAR === */
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            width: 100%;
+            background: none;
+            border: none;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-family: inherit;
+            font-weight: 500;
+            text-align: left;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .sidebar-link:hover {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+        }
+
+        .sidebar-link.active {
+            background: linear-gradient(135deg, rgba(0, 217, 163, 0.15), rgba(0, 217, 163, 0.05));
+            color: var(--admin-accent);
+            border: 1px solid rgba(0, 217, 163, 0.2);
+        }
+
+        .sidebar-link .sb-icon {
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .sb-badge {
+            margin-left: auto;
+            background: var(--admin-red);
+            color: #fff;
+            font-size: 0.62rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 99px;
+            min-width: 18px;
+            text-align: center;
+            box-shadow: 0 0 8px rgba(248, 113, 113, 0.5);
+            animation: pulse-badge 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-badge {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.15);
+            }
+        }
+
+        /* === STAT CARDS === */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            cursor: default;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            filter: blur(24px);
+            opacity: 0.25;
+            transition: opacity 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-card:hover::before {
+            opacity: 0.45;
+        }
+
+        .stat-card.green {
+            border-color: rgba(52, 211, 153, 0.3);
+        }
+
+        .stat-card.green::before {
+            background: var(--admin-green);
+        }
+
+        .stat-card.blue {
+            border-color: rgba(96, 165, 250, 0.3);
+        }
+
+        .stat-card.blue::before {
+            background: var(--admin-blue);
+        }
+
+        .stat-card.yellow {
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+
+        .stat-card.yellow::before {
+            background: var(--admin-yellow);
+        }
+
+        .stat-card.red {
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+
+        .stat-card.red::before {
+            background: var(--admin-red);
+        }
+
+        .stat-card.purple {
+            border-color: rgba(167, 139, 250, 0.3);
+        }
+
+        .stat-card.purple::before {
+            background: var(--admin-purple);
+        }
+
+        .stat-card.orange {
+            border-color: rgba(251, 146, 60, 0.3);
+        }
+
+        .stat-card.orange::before {
+            background: var(--admin-orange);
+        }
+
+        .stat-icon {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .stat-num {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-num.green {
+            color: var(--admin-green);
+        }
+
+        .stat-num.blue {
+            color: var(--admin-blue);
+        }
+
+        .stat-num.yellow {
+            color: var(--admin-yellow);
+        }
+
+        .stat-num.red {
+            color: var(--admin-red);
+        }
+
+        .stat-num.purple {
+            color: var(--admin-purple);
+        }
+
+        .stat-num.orange {
+            color: var(--admin-orange);
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .stat-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* === TOOLBAR === */
+        .section-toolbar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .section-toolbar .title-block h1 {
+            margin: 0;
+        }
+
+        .section-toolbar .title-block p {
+            margin: 4px 0 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        /* === FILTER BAR === */
+        .filter-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+        }
+
+        .filter-bar input,
+        .filter-bar select {
+            background: #1a1f2e !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            border-radius: 8px !important;
+            color: #e2e8f0 !important;
+            padding: 8px 12px !important;
+            font-size: 0.83rem !important;
+            font-family: inherit !important;
+            outline: none !important;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            color-scheme: dark;
+        }
+
+        .filter-bar input {
+            min-width: 220px;
+            flex: 1;
+        }
+
+        .filter-bar select {
+            min-width: 150px;
+            cursor: pointer;
+        }
+
+        .filter-bar input:focus,
+        .filter-bar select:focus {
+            border-color: var(--admin-accent);
+            background: rgba(0, 217, 163, 0.04);
+        }
+
+        .filter-info {
+            margin-left: auto;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 6px;
+        }
+
+        .filter-bar .btn-clear {
+            background: rgba(248, 113, 113, 0.1);
+            border: 1px solid rgba(248, 113, 113, 0.25);
+            color: var(--admin-red);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        .filter-bar .btn-clear:hover {
+            background: rgba(248, 113, 113, 0.2);
+        }
+
+        /* === TABLE === */
+        .data-table-wrap {
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            background: var(--bg-card);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.855rem;
+        }
+
+        .data-table thead th {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 11px 15px;
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            border-bottom: 1px solid var(--glass-border);
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: background 0.12s;
+        }
+
+        .data-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .data-table tbody td {
+            padding: 11px 15px;
+            color: var(--text-secondary);
+            vertical-align: middle;
+        }
+
+        .data-table td strong {
+            color: var(--text-primary);
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar-sm {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--admin-accent), var(--admin-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #000;
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .user-email {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* === ACTION BUTTONS === */
+        .btn-xs {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.74rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .btn-xs.green {
+            background: rgba(52, 211, 153, 0.12);
+            color: var(--admin-green);
+        }
+
+        .btn-xs.green:hover {
+            background: rgba(52, 211, 153, 0.25);
+        }
+
+        .btn-xs.red {
+            background: rgba(248, 113, 113, 0.12);
+            color: var(--admin-red);
+        }
+
+        .btn-xs.red:hover {
+            background: rgba(248, 113, 113, 0.25);
+        }
+
+        .btn-xs.blue {
+            background: rgba(96, 165, 250, 0.12);
+            color: var(--admin-blue);
+        }
+
+        .btn-xs.blue:hover {
+            background: rgba(96, 165, 250, 0.25);
+        }
+
+        .btn-xs.orange {
+            background: rgba(251, 146, 60, 0.12);
+            color: var(--admin-orange);
+        }
+
+        .btn-xs.orange:hover {
+            background: rgba(251, 146, 60, 0.25);
+        }
+
+        .btn-xs.purple {
+            background: rgba(167, 139, 250, 0.12);
+            color: var(--admin-purple);
+        }
+
+        .btn-xs.purple:hover {
+            background: rgba(167, 139, 250, 0.25);
+        }
+
+        .action-group {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        /* === STATUS BADGES === */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 9px;
+            border-radius: 99px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            border: 1px solid;
+            white-space: nowrap;
+        }
+
+        .badge.green {
+            color: var(--admin-green);
+            background: rgba(52, 211, 153, 0.1);
+            border-color: rgba(52, 211, 153, 0.25);
+        }
+
+        .badge.blue {
+            color: var(--admin-blue);
+            background: rgba(96, 165, 250, 0.1);
+            border-color: rgba(96, 165, 250, 0.25);
+        }
+
+        .badge.yellow {
+            color: var(--admin-yellow);
+            background: rgba(251, 191, 36, 0.1);
+            border-color: rgba(251, 191, 36, 0.25);
+        }
+
+        .badge.red {
+            color: var(--admin-red);
+            background: rgba(248, 113, 113, 0.1);
+            border-color: rgba(248, 113, 113, 0.25);
+        }
+
+        .badge.purple {
+            color: var(--admin-purple);
+            background: rgba(167, 139, 250, 0.1);
+            border-color: rgba(167, 139, 250, 0.25);
+        }
+
+        .badge.orange {
+            color: var(--admin-orange);
+            background: rgba(251, 146, 60, 0.1);
+            border-color: rgba(251, 146, 60, 0.25);
+        }
+
+        .badge.gray {
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* === PAGINATION === */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 14px 18px;
+            border-top: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .pg-info {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .pg-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .pg-btn {
+            padding: 6px 11px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: inherit;
+            transition: all 0.15s;
+            line-height: 1;
+        }
+
+        .pg-btn:hover:not(:disabled) {
+            border-color: var(--admin-accent);
+            color: var(--admin-accent);
+        }
+
+        .pg-btn.active {
+            background: var(--admin-accent);
+            color: #000;
+            border-color: var(--admin-accent);
+            font-weight: 800;
+        }
+
+        .pg-btn:disabled {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .pg-size select {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            padding: 5px 8px;
+            font-size: 0.78rem;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        /* === MODAL === */
+        .admin-modal {
+            max-width: 720px;
+            width: 95vw;
+        }
+
+        .detail-section {
+            margin-bottom: 18px;
+        }
+
+        .detail-section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .detail-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .detail-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+
+        .di-label {
+            font-size: 0.67rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            margin-bottom: 4px;
+        }
+
+        .di-val {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .di-val.mono {
+            font-family: monospace;
+            font-size: 0.78rem;
+        }
+
+        /* === ALERT CARD === */
+        .alert-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid;
+            flex-wrap: wrap;
+        }
+
+        .alert-card.warn {
+            background: rgba(251, 191, 36, 0.07);
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+
+        .alert-card.red {
+            background: rgba(248, 113, 113, 0.07);
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+
+        .alert-card.info {
+            background: rgba(96, 165, 250, 0.07);
+            border-color: rgba(96, 165, 250, 0.3);
+        }
+
+        /* === DASHBOARD AKTİVİTE === */
+        .activity-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .activity-text {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .activity-text strong {
+            color: var(--text-primary);
+        }
+
+        .activity-time {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* === AYARLAR === */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .settings-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 22px;
+        }
+
+        .settings-card h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin: 0 0 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* === EMPTY STATE === */
+        .table-empty {
+            text-align: center;
+            padding: 48px 24px;
+        }
+
+        .table-empty .empty-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .table-empty .empty-title {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* === MIKRO ANIMASYONLAR === */
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .anim-in {
+            animation: fadeSlideIn 0.25s ease forwards;
+        }
+
+        /* === MESAJ & LOG KUTULARI === */
+        .log-box {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            padding-left: 10px;
+            border-left: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .log-box strong {
+            color: var(--text-primary);
+        }
+
+        .chat-bubble {
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+        }
+
+        .chat-kullanici {
+            background: rgba(96, 165, 250, 0.08);
+            border-left: 3px solid var(--admin-blue);
+        }
+
+        .chat-avukat {
+            background: rgba(52, 211, 153, 0.08);
+            border-left: 3px solid var(--admin-green);
+        }
+
+        .chat-system {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid var(--text-muted);
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
+        /* === LOADING SHIMMER === */
+        .shimmer-row {
+            height: 48px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0.03) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+            margin-bottom: 6px;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% center;
+            }
+
+            100% {
+                background-position: -200% center;
+            }
+        }
+
+        /* === DASHBOARD QUICK STATS === */
+        .qs-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 20px;
+        }
+
+        .qs-card {
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 18px;
+        }
+
+        .qs-card h4 {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--text-muted);
+            margin: 0 0 12px;
+        }
+
+        /* City stat list */
+        .city-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .city-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .city-name {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            min-width: 90px;
+        }
+
+        .city-bar-bg {
+            flex: 1;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .city-bar {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--admin-accent), var(--admin-blue));
+            transition: width 0.6s ease;
+        }
+
+        .city-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            min-width: 24px;
+            text-align: right;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .qs-row {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+            }
+
+            .filter-bar input,
+            .filter-bar select {
+                min-width: unset;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar scrolled">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">&#x2696;&#xFE0F;</span>
+                <span class="logo-text">Hak<span class="logo-accent">Portal</span></span>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <span id="adminWelcome" style="color:var(--text-muted);font-size:0.82rem;margin-right:12px"></span>
+                <span class="status-badge status-ACTIVE" style="margin-right:10px;font-size:0.72rem">⚙️ &nbsp;SUPER
+                    ADMIN</span>
+                <button class="nav-btn-outline" onclick="window.location.href='/'">Ana Sayfa</button>
+                <button class="nav-btn-outline nav-btn-danger" onclick="logout()">Çıkış</button>
+            </div>
+            <button class="hamburger" id="hamburger"
+                onclick="toggleMenu()"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+
+    <div class="panel-layout">
+
+        <!-- ═══════════ SIDEBAR ═══════════ -->
+        <aside class="panel-sidebar">
+            <div class="panel-sidebar-title">Yönetim</div>
+
+            <button class="sidebar-link active" onclick="adminSection('dashboard')" id="sbDash">
+                <span class="sb-icon">📊</span> Dashboard
+            </button>
+            <button class="sidebar-link" onclick="adminSection('avukatlar')" id="sbAvukatlar">
+                <span class="sb-icon">⚖️</span> Avukatlar
+                <span id="sbAvBadge" class="sb-badge" style="display:none">0</span>
+            </button>
+            <button class="sidebar-link" onclick="adminSection('kullanicilar')" id="sbKullanici">
+                <span class="sb-icon">👥</span> Kullanıcılar
+            </button>
+            <button class="sidebar-link" onclick="adminSection('davalar')" id="sbDavalar">
+                <span class="sb-icon">📋</span> Davalar
+            </button>
+            <button class="sidebar-link" onclick="adminSection('odemeler')" id="sbOdemeler">
+                <span class="sb-icon">💰</span> Ödemeler
+            </button>
+
+            <div class="panel-sidebar-title">Sistem</div>
+            <button class="sidebar-link" onclick="adminSection('ayarlar')" id="sbAyarlar">
+                <span class="sb-icon">⚙️</span> Sistem Ayarları
+            </button>
+            <button class="sidebar-link" onclick="logout()">
+                <span class="sb-icon">🚪</span> Çıkış Yap
+            </button>
+        </aside>
+
+        <main class="panel-main">
+
+            <!-- ═══════════ DASHBOARD ═══════════ -->
+            <div id="adminSectionDashboard">
+                <div class="section-toolbar">
+                    <div class="title-block">
+                        <h1 class="panel-title">Dashboard</h1>
+                        <p>Platform genel görünümü ve hızlı istatistikler</p>
+                    </div>
+                    <div class="toolbar-actions">
+                        <button class="btn-ghost" onclick="loadDashboard()">🔄 &nbsp;Yenile</button>
+                    </div>
+                </div>
+                <div id="dashboardStats">
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                        <div class="shimmer-row" style="height:120px;border-radius:16px"></div>
+                        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+                            <div class="shimmer-row"></div>
+                            <div class="shimmer-row"></div>
+                            <div class="shimmer-row"></div>
+                            <div class="shimmer-row"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════ AVUKATLAR ═══════════ -->
+            <div id="adminSectionAvukatlar" style="display:none">
+                <div class="section-toolbar">
+                    <div class="title-block">
+                        <h1 class="panel-title">Avukat Yönetimi</h1>
+                        <p id="avSubInfo">Kayıtlı avukatlar</p>
+                    </div>
+                    <div class="toolbar-actions">
+                        <button class="btn-ghost" onclick="loadAvukatlar()">🔄 &nbsp;Yenile</button>
+                    </div>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="avAra" placeholder="🔍  Ad, soyad veya e-posta ara…"
+                        oninput="filterAvukatlar()">
+                    <select id="avSehir" onchange="filterAvukatlar()">
+                        <option value="">— Tüm Şehirler —</option>
+                    </select>
+                    <select id="avDurum" onchange="filterAvukatlar()">
+                        <option value="">— Tüm Durumlar —</option>
+                        <option value="bekliyor">⏳ Onay Bekliyor</option>
+                        <option value="onaylı">✅ Onaylı</option>
+                        <option value="banlı">🚫 Banlı/Askıda</option>
+                    </select>
+                    <button class="btn-clear" onclick="clearFilter('av')">✕ Temizle</button>
+                    <span class="filter-info" id="avInfo">—</span>
+                </div>
+                <div id="avukatlarTable"></div>
+            </div>
+
+            <!-- ═══════════ KULLANICILAR ═══════════ -->
+            <div id="adminSectionKullanicilar" style="display:none">
+                <div class="section-toolbar">
+                    <div class="title-block">
+                        <h1 class="panel-title">Kullanıcı Yönetimi</h1>
+                        <p id="kulSubInfo">Kayıtlı kullanıcılar</p>
+                    </div>
+                    <div class="toolbar-actions">
+                        <button class="btn-ghost" onclick="loadKullanicilar()">🔄 &nbsp;Yenile</button>
+                    </div>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="kulAra" placeholder="🔍  Ad, soyad veya e-posta ara…"
+                        oninput="filterKullanicilar()">
+                    <select id="kulSehir" onchange="filterKullanicilar()">
+                        <option value="">— Tüm Şehirler —</option>
+                    </select>
+                    <select id="kulDurum" onchange="filterKullanicilar()">
+                        <option value="">— Tüm Durumlar —</option>
+                        <option value="aktif">✅ Aktif</option>
+                        <option value="banlı">🚫 Banlı</option>
+                    </select>
+                    <button class="btn-clear" onclick="clearFilter('kul')">✕ Temizle</button>
+                    <span class="filter-info" id="kulInfo">—</span>
+                </div>
+                <div id="kullanicilarTable"></div>
+            </div>
+
+            <!-- ═══════════ DAVALAR ═══════════ -->
+            <div id="adminSectionDavalar" style="display:none">
+                <div class="section-toolbar">
+                    <div class="title-block">
+                        <h1 class="panel-title">Dava Yönetimi</h1>
+                        <p id="davaSubInfo">Tüm davalar</p>
+                    </div>
+                    <div class="toolbar-actions">
+                        <button class="btn-ghost" onclick="loadDavalar()">🔄 &nbsp;Yenile</button>
+                    </div>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="davaAra" placeholder="🔍  Kullanıcı adı, soyadı veya e-posta…"
+                        oninput="filterDavalar()">
+                    <select id="davaSehir" onchange="filterDavalar()">
+                        <option value="">— Tüm Şehirler —</option>
+                    </select>
+                    <select id="davaDurum" onchange="filterDavalar()">
+                        <option value="">— Tüm Durumlar —</option>
+                        <option value="OPEN">Açık</option>
+                        <option value="PENDING_OFFER">Teklif Bekleniyor</option>
+                        <option value="OFFER_MADE">Teklif Yapıldı</option>
+                        <option value="WAITING_PAYMENT">Ödeme Bekleniyor</option>
+                        <option value="PRE_CASE_REVIEW">Ön İnceleme</option>
+                        <option value="ACTIVE">Aktif</option>
+                        <option value="IN_PROGRESS">Devam Ediyor</option>
+                        <option value="LAWYER_ASSIGNED">Avukat Atandı</option>
+                        <option value="ILK_GORUSME">İlk Görüşme</option>
+                        <option value="DAVA_ACILDI">Dava Açıldı</option>
+                        <option value="DURUSMA">Duruşma</option>
+                        <option value="TAHSIL">Tahsil</option>
+                        <option value="KAPANDI">Kapandı</option>
+                    </select>
+                    <select id="davaTur" onchange="filterDavalar()">
+                        <option value="">— Tüm Dava Türleri —</option>
+                    </select>
+                    <button class="btn-clear" onclick="clearFilter('dava')">✕ Temizle</button>
+                    <span class="filter-info" id="davaInfo">—</span>
+                </div>
+                <div id="davalarTable"></div>
+            </div>
+
+            <!-- ═══════════ ÖDEMELER ═══════════ -->
+            <div id="adminSectionOdemeler" style="display:none">
+                <div class="section-toolbar">
+                    <div class="title-block">
+                        <h1 class="panel-title">Ödeme Geçmişi</h1>
+                        <p id="odemeSubInfo">Platform gelirleri</p>
+                    </div>
+                    <div class="toolbar-actions">
+                        <button class="btn-ghost" onclick="loadOdemeler()">🔄 &nbsp;Yenile</button>
+                    </div>
+                </div>
+                <div class="filter-bar">
+                    <input type="text" id="odemeAra" placeholder="🔍  E-posta, kart son 4 veya avukat adı ara…"
+                        oninput="filterOdemeler()">
+                    <button class="btn-clear" onclick="clearFilter('odeme')">✕ Temizle</button>
+                    <span class="filter-info" id="odemeInfo">—</span>
+                </div>
+                <div id="odemelerTable"></div>
+            </div>
+
+            <!-- ═══════════ AYARLAR ═══════════ -->
+            <div id="adminSectionAyarlar" style="display:none">
+                <div class="section-toolbar">
+                    <div class="title-block">
+                        <h1 class="panel-title">Sistem Ayarları</h1>
+                        <p>Platform parametrelerini yapılandırın</p>
+                    </div>
+                </div>
+                <div class="settings-grid">
+                    <div class="settings-card">
+                        <h3>💰 Kıdem Tazminatı Tavanı</h3>
+                        <div class="form-group">
+                            <label class="form-label">Güncel Tavan (₺)</label>
+                            <div class="input-with-icon">
+                                <span class="input-icon">₺</span>
+                                <input type="number" class="form-input with-icon" id="kidemTavaniInput"
+                                    placeholder="35058.58" />
+                            </div>
+                            <p style="font-size:0.76rem;color:var(--text-muted);margin-top:6px">Hazine Bakanlığı
+                                tarafından yılda iki kez güncellenir.</p>
+                        </div>
+                        <button class="btn-primary" onclick="kaydetTavan()">💾 &nbsp;Kaydet</button>
+                    </div>
+                    <div class="settings-card">
+                        <h3>💳 Platform Hizmet Bedeli Skalası</h3>
+                        <div class="form-group">
+                            <label class="form-label">0 – 20.000 TL arası (₺)</label>
+                            <input type="number" class="form-input" id="skala1" value="750" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">20.000 – 50.000 TL arası (₺)</label>
+                            <input type="number" class="form-input" id="skala2" value="1250" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">50.000 TL ve üzeri (₺)</label>
+                            <input type="number" class="form-input" id="skala3" value="2000" />
+                        </div>
+                        <button class="btn-primary" onclick="kaydetSkala()">💾 &nbsp;Skalayı Güncelle</button>
+                    </div>
+                    <div class="settings-card">
+                        <h3>🔒 Güvenlik Durumu</h3>
+                        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+                            <div class="detail-item">
+                                <div class="di-label">JWT Kimlik Doğrulama</div>
+                                <div class="di-val" style="color:var(--admin-green)">✅ Aktif</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="di-label">Rol Denetimi</div>
+                                <div class="di-val" style="color:var(--admin-green)">✅ Admin Rolü Doğrulandı</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="di-label">İletişim Filtresi</div>
+                                <div class="di-val" style="color:var(--admin-green)">✅ Mesajlarda Aktif</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ═══════════ DAVA DETAY MODAL ═══════════ -->
+    <div id="davaDetayModal" class="modal-overlay" style="display:none"
+        onclick="if(event.target===this)closeAdminModal('davaDetayModal')">
+        <div class="modal admin-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">📋 &nbsp;Dava Detayı</h3>
+                <button class="modal-close" onclick="closeAdminModal('davaDetayModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="davaDetayBody" style="max-height:72vh;overflow-y:auto;padding:20px"></div>
+        </div>
+    </div>
+
+    <!-- ═══════════ AVUKAT DETAY MODAL ═══════════ -->
+    <div id="avukatDetayModal" class="modal-overlay" style="display:none"
+        onclick="if(event.target===this)closeAdminModal('avukatDetayModal')">
+        <div class="modal admin-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">⚖️ &nbsp;Avukat Profili</h3>
+                <button class="modal-close" onclick="closeAdminModal('avukatDetayModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="avukatDetayBody" style="max-height:72vh;overflow-y:auto;padding:20px"></div>
+        </div>
+    </div>
+
+    <!-- ═══════════ KUL DETAY MODAL ═══════════ -->
+    <div id="kulDetayModal" class="modal-overlay" style="display:none"
+        onclick="if(event.target===this)closeAdminModal('kulDetayModal')">
+        <div class="modal admin-modal">
+            <div class="modal-header">
+                <h3 class="modal-title">👤 &nbsp;Kullanıcı Detayı</h3>
+                <button class="modal-close" onclick="closeAdminModal('kulDetayModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="kulDetayBody" style="max-height:72vh;overflow-y:auto;padding:20px"></div>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script src="/js/admin-panel.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avukat Başvurusu – HakPortal</title>
+    <meta name="description"
+        content="HakPortal'a avukat olarak başvurun. Şehrinizdeki işçi davalarına teklif verin, güvenli platform üzerinden müvekkil edinin." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖️</text></svg>" />
+    <style>
+        /* ===== AVUKAT BAŞVURU SAYFASI ===== */
+        .av-page {
+            min-height: 100vh;
+            background: var(--bg-primary);
+            padding: 100px 20px 60px;
+        }
+
+        .av-container {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .av-hero {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .av-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 999px;
+            padding: 6px 16px;
+            font-size: 0.83rem;
+            color: var(--primary-light);
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .av-badge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            animation: pulse 2s infinite;
+        }
+
+        .av-title {
+            font-size: clamp(1.8rem, 4vw, 2.6rem);
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 14px;
+        }
+
+        .av-title span {
+            color: var(--primary-light);
+        }
+
+        .av-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        /* ===== AVANTAJLAR ===== */
+        .av-benefits {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 36px;
+        }
+
+        .av-benefit {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            text-align: center;
+        }
+
+        .av-benefit-icon {
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+        }
+
+        .av-benefit-title {
+            font-size: 0.87rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .av-benefit-desc {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        /* ===== FORM KART ===== */
+        .av-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .av-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        /* Form bölümleri */
+        .form-section {
+            margin-bottom: 28px;
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-section:last-of-type {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .form-section-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        /* Uzmanlık checkboxları */
+        .uzmanlik-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .uzmanlik-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .uzmanlik-item:hover {
+            border-color: var(--primary);
+            color: var(--text-primary);
+            background: rgba(99, 102, 241, 0.06);
+        }
+
+        .uzmanlik-item input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
+            accent-color: var(--primary);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .uzmanlik-item.selected {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* Başarı ekranı */
+        .success-screen {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounceIn 0.5s ease;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .success-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .success-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            max-width: 440px;
+            margin: 0 auto 28px;
+        }
+
+        .success-info-box {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            margin: 0 auto 28px;
+            max-width: 440px;
+        }
+
+        .success-info-box p {
+            font-size: 0.87rem;
+            color: var(--text-secondary);
+            margin: 4px 0;
+        }
+
+        /* Error */
+        .form-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: #f87171;
+            font-size: 0.88rem;
+            margin-bottom: 16px;
+            display: none;
+            line-height: 1.5;
+        }
+
+        .required {
+            color: #f87171;
+            margin-left: 2px;
+        }
+
+        /* Textarea */
+        textarea.form-input {
+            resize: vertical;
+            min-height: 90px;
+            line-height: 1.6;
+        }
+
+        /* Yıl / sayı input */
+        input[type="number"].form-input {
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"].form-input::-webkit-inner-spin-button {
+            display: none;
+        }
+
+        @media (max-width: 640px) {
+            .av-benefits {
+                grid-template-columns: 1fr;
+            }
+
+            .av-card {
+                padding: 24px 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">⚖️</span>
+                <span class="logo-text">Hak<span class="logo-accent">Portal</span></span>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <a href="/#hesaplama" class="nav-link">Hesaplama</a>
+                <a href="/" class="nav-link">Ana Sayfa</a>
+                <a href="/giris" class="nav-btn-outline" id="navGirisBtn">Giriş Yap</a>
+                <a href="/kayit" class="nav-btn-primary" id="navKayitBtn">Kullanıcı Kaydı</a>
+                <button class="nav-btn-outline" id="navPanelBtn" style="display:none" onclick="goPanel()">Panel</button>
+                <button class="nav-btn-outline nav-btn-danger" id="navCikisBtn" style="display:none"
+                    onclick="logout()">Çıkış</button>
+            </div>
+            <button class="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></button>
+        </div>
+    </nav>
+
+    <!-- ANA İÇERİK -->
+    <div class="av-page">
+        <div class="av-container">
+
+            <!-- HERO -->
+            <div class="av-hero">
+                <div class="av-badge">
+                    <span class="av-badge-dot"></span>
+                    Avukatlara Özel Platform
+                </div>
+                <h1 class="av-title">
+                    <span>HakPortal</span>'a Avukat<br />Olarak Katılın
+                </h1>
+                <p class="av-subtitle">
+                    Şehrinizdeki işçi davalarına anonim teklif verin. Nitelikli müvekkiller edinin.
+                    Güvenli platform üzerinden iletişim kurun.
+                </p>
+            </div>
+
+            <!-- AVANTAJLAR -->
+            <div class="av-benefits">
+                <div class="av-benefit">
+                    <div class="av-benefit-icon">🎯</div>
+                    <div class="av-benefit-title">Nitelikli Müvekkil</div>
+                    <div class="av-benefit-desc">Hesaplanmış alacağı olan gerçek müvekkiller</div>
+                </div>
+                <div class="av-benefit">
+                    <div class="av-benefit-icon">🔒</div>
+                    <div class="av-benefit-title">Anonim Sistem</div>
+                    <div class="av-benefit-desc">Ödeme sonrasına kadar kimsenin bilgisi açılmaz</div>
+                </div>
+                <div class="av-benefit">
+                    <div class="av-benefit-icon">💬</div>
+                    <div class="av-benefit-title">Güvenli İletişim</div>
+                    <div class="av-benefit-desc">Platform üzerinden şifreli mesajlaşma</div>
+                </div>
+            </div>
+
+            <!-- BAŞVURU FORMU -->
+            <div class="av-card" id="avukatFormCard">
+                <div class="form-error" id="avError"></div>
+
+                <!-- 1. KİŞİSEL BİLGİLER -->
+                <div class="form-section">
+                    <div class="form-section-title">👤 Kişisel Bilgiler</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Unvan</label>
+                            <select class="form-select" id="avUnvan">
+                                <option value="Av.">Av.</option>
+                                <option value="Dr. Av.">Dr. Av.</option>
+                                <option value="Prof. Dr. Av.">Prof. Dr. Av.</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:2">
+                            <label class="form-label">Ad <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="avAd" placeholder="Adınız"
+                                autocomplete="given-name" />
+                        </div>
+                        <div class="form-group" style="flex:2">
+                            <label class="form-label">Soyad <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="avSoyad" placeholder="Soyadınız"
+                                autocomplete="family-name" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">E-posta <span class="required">*</span></label>
+                            <input type="email" class="form-input" id="avEmail" placeholder="ornek@email.com"
+                                autocomplete="email" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Telefon <span class="required">*</span></label>
+                            <input type="tel" class="form-input" id="avTelefon" placeholder="05xx xxx xx xx"
+                                autocomplete="tel" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Şehir (Faaliyet Gösterdiğiniz) <span class="required">*</span></label>
+                        <select class="form-select" id="avSehir">
+                            <option value="">Şehir seçin...</option>
+                            <option>Adana</option>
+                            <option>Adıyaman</option>
+                            <option>Afyonkarahisar</option>
+                            <option>Ağrı</option>
+                            <option>Aksaray</option>
+                            <option>Amasya</option>
+                            <option>Ankara</option>
+                            <option>Antalya</option>
+                            <option>Ardahan</option>
+                            <option>Artvin</option>
+                            <option>Aydın</option>
+                            <option>Balıkesir</option>
+                            <option>Bartın</option>
+                            <option>Batman</option>
+                            <option>Bayburt</option>
+                            <option>Bilecik</option>
+                            <option>Bingöl</option>
+                            <option>Bitlis</option>
+                            <option>Bolu</option>
+                            <option>Burdur</option>
+                            <option>Bursa</option>
+                            <option>Çanakkale</option>
+                            <option>Çankırı</option>
+                            <option>Çorum</option>
+                            <option>Denizli</option>
+                            <option>Diyarbakır</option>
+                            <option>Düzce</option>
+                            <option>Edirne</option>
+                            <option>Elazığ</option>
+                            <option>Erzincan</option>
+                            <option>Erzurum</option>
+                            <option>Eskişehir</option>
+                            <option>Gaziantep</option>
+                            <option>Giresun</option>
+                            <option>Gümüşhane</option>
+                            <option>Hakkari</option>
+                            <option>Hatay</option>
+                            <option>Iğdır</option>
+                            <option>Isparta</option>
+                            <option>İstanbul</option>
+                            <option>İzmir</option>
+                            <option>Kahramanmaraş</option>
+                            <option>Karabük</option>
+                            <option>Karaman</option>
+                            <option>Kars</option>
+                            <option>Kastamonu</option>
+                            <option>Kayseri</option>
+                            <option>Kırıkkale</option>
+                            <option>Kırklareli</option>
+                            <option>Kırşehir</option>
+                            <option>Kilis</option>
+                            <option>Kocaeli</option>
+                            <option>Konya</option>
+                            <option>Kütahya</option>
+                            <option>Malatya</option>
+                            <option>Manisa</option>
+                            <option>Mardin</option>
+                            <option>Mersin</option>
+                            <option>Muğla</option>
+                            <option>Muş</option>
+                            <option>Nevşehir</option>
+                            <option>Niğde</option>
+                            <option>Ordu</option>
+                            <option>Osmaniye</option>
+                            <option>Rize</option>
+                            <option>Sakarya</option>
+                            <option>Samsun</option>
+                            <option>Siirt</option>
+                            <option>Sinop</option>
+                            <option>Sivas</option>
+                            <option>Şanlıurfa</option>
+                            <option>Şırnak</option>
+                            <option>Tekirdağ</option>
+                            <option>Tokat</option>
+                            <option>Trabzon</option>
+                            <option>Tunceli</option>
+                            <option>Uşak</option>
+                            <option>Van</option>
+                            <option>Yalova</option>
+                            <option>Yozgat</option>
+                            <option>Zonguldak</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 2. BARO BİLGİLERİ -->
+                <div class="form-section">
+                    <div class="form-section-title">🏛️ Baro Bilgileri</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Baro Adı <span class="required">*</span></label>
+                            <select class="form-select" id="avBaro">
+                                <option value="">Seçin...</option>
+                                <option>İstanbul Barosu</option>
+                                <option>Ankara Barosu</option>
+                                <option>İzmir Barosu</option>
+                                <option>Bursa Barosu</option>
+                                <option>Antalya Barosu</option>
+                                <option>Adana Barosu</option>
+                                <option>Gaziantep Barosu</option>
+                                <option>Mersin Barosu</option>
+                                <option>Kocaeli Barosu</option>
+                                <option>Konya Barosu</option>
+                                <option>Şanlıurfa Barosu</option>
+                                <option>Diyarbakır Barosu</option>
+                                <option>Trabzon Barosu</option>
+                                <option>Samsun Barosu</option>
+                                <option>Kayseri Barosu</option>
+                                <option>Eskişehir Barosu</option>
+                                <option>Malatya Barosu</option>
+                                <option>Manisa Barosu</option>
+                                <option>Sakarya Barosu</option>
+                                <option>Muğla Barosu</option>
+                                <option>Hatay Barosu</option>
+                                <option>Erzurum Barosu</option>
+                                <option>Van Barosu</option>
+                                <option>Elazığ Barosu</option>
+                                <option>Diğer</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Baro Sicil No <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="avBaroNo" placeholder="Örn: 12345" />
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">TC Sicil No (Opsiyonel)</label>
+                            <input type="text" class="form-input" id="avSicilNo"
+                                placeholder="Türkiye Barolar Birliği Sicil No" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mezuniyet Yılı <span class="required">*</span></label>
+                            <input type="number" class="form-input" id="avMezuniyetYili" placeholder="Örn: 2010"
+                                min="1970" max="2025" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mesleki Deneyim (Yıl)</label>
+                        <input type="number" class="form-input" id="avDeneyimYil" placeholder="Örn: 8" min="0" max="60"
+                            style="max-width:180px" />
+                    </div>
+                </div>
+
+                <!-- 3. UZMANLIK ALANLARI -->
+                <div class="form-section">
+                    <div class="form-section-title">⚖️ Uzmanlık Alanları <span class="required">*</span></div>
+                    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">En az 1, en fazla 5 alan
+                        seçin. İşçi hukukuyla ilgili alanlar önerilir.</p>
+                    <div class="uzmanlik-grid" id="uzmanlikGrid">
+                        <!-- JS ile doldurulacak -->
+                    </div>
+                    <div id="uzmanlikError" style="display:none;font-size:0.82rem;color:#f87171;margin-top:8px">⚠️ En az
+                        1 uzmanlık alanı seçin.</div>
+                </div>
+
+                <!-- 4. HAKKINDA -->
+                <div class="form-section">
+                    <div class="form-section-title">📝 Kendinizi Tanıtın</div>
+                    <div class="form-group">
+                        <label class="form-label">Hakkınızda <span class="required">*</span></label>
+                        <textarea class="form-input" id="avBio"
+                            placeholder="Kendinizi ve mesleki deneyiminizi kısaca anlatın. Avantajlarınızı, çözdüğünüz dava türlerini belirtin. (İletişim bilgisi, sosyal medya linki yazılamaz)"
+                            rows="5"></textarea>
+                        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px" id="bioCounter">0 / 500
+                            karakter</div>
+                    </div>
+                </div>
+
+                <!-- 5. ŞİFRE -->
+                <div class="form-section">
+                    <div class="form-section-title">🔒 Giriş Bilgileri</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Şifre <span class="required">*</span></label>
+                            <input type="password" class="form-input" id="avPassword" placeholder="En az 8 karakter"
+                                autocomplete="new-password" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Şifre Tekrar <span class="required">*</span></label>
+                            <input type="password" class="form-input" id="avPasswordConfirm"
+                                placeholder="Şifreyi tekrar girin" autocomplete="new-password" />
+                        </div>
+                    </div>
+                    <div
+                        style="background:rgba(99,102,241,0.07);border:1px solid rgba(99,102,241,0.2);border-radius:8px;padding:14px;font-size:0.82rem;color:var(--text-secondary);line-height:1.6;margin-top:4px">
+                        <strong style="color:var(--primary-light)">⚠️ Başvuru Süreci:</strong>
+                        Başvurunuz alındıktan sonra admin ekibimiz baro bilgilerinizi doğrulayacak.
+                        <strong>Onay e-postası geldikten sonra</strong> sisteme giriş yapabileceksiniz.
+                        Bu işlem genellikle 1-3 iş günü sürmektedir.
+                    </div>
+                </div>
+
+                <!-- KVKK & GÖNDER -->
+                <div style="margin-bottom:16px">
+                    <label
+                        style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:0.85rem;color:var(--text-secondary)">
+                        <input type="checkbox" id="avKvkk"
+                            style="margin-top:3px;flex-shrink:0;accent-color:var(--primary)" />
+                        <span>
+                            <a href="/kvkk" target="_blank" style="color:var(--primary-light)">KVKK Aydınlatma
+                                Metni</a>'ni ve
+                            <a href="/kullanim-sartlari" target="_blank" style="color:var(--primary-light)">Kullanım
+                                Şartları</a>'nı okudum, kabul ediyorum.
+                            Platform'un baro bilgilerimi doğrulama amacıyla kullanabileceğini onaylıyorum.
+                        </span>
+                    </label>
+                </div>
+
+                <button class="btn-primary btn-block" id="avBasvuruBtn" onclick="avukatBasvur()"
+                    style="font-size:1rem;padding:14px">
+                    ⚖️ Başvurumu Gönder
+                </button>
+            </div>
+
+            <!-- BAŞARI EKRANI (gizli) -->
+            <div class="av-card" id="successCard" style="display:none">
+                <div class="success-screen">
+                    <div class="success-icon">🎉</div>
+                    <h2 class="success-title">Başvurunuz Alındı!</h2>
+                    <p class="success-desc">
+                        Baro bilgilerinizi ve başvurunuzu incelemeye başladık.
+                        Onay sonrası e-posta ile bilgilendirileceksiniz.
+                    </p>
+                    <div class="success-info-box">
+                        <p>📧 Onay e-postası: <strong id="successEmail"></strong></p>
+                        <p>⏱️ Tahmini süre: <strong>1–3 iş günü</strong></p>
+                        <p>📞 Sorularınız için: <strong>destek@hakportal.com</strong></p>
+                    </div>
+                    <a href="/" class="btn-primary" style="display:inline-flex;gap:8px;text-decoration:none">
+                        🏠 Ana Sayfaya Dön
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        // ==============================
+        // AVUKAT BAŞVURU SAYFASI JS
+        // ==============================
+
+        const UZMANLIKLAR = [
+            'İş Hukuku', 'Kıdem Tazminatı', 'İhbar Tazminatı', 'İşçi Alacakları',
+            'Fazla Mesai', 'Yıllık İzin', 'İş Kazası', 'Meslek Hastalığı',
+            'İşe İade Davası', 'Mobbing', 'Sendika Hukuku', 'Sosyal Güvenlik',
+            'SGK Davaları', 'Toplu İş Sözleşmesi', 'İşveren Danışmanlığı', 'Diğer'
+        ];
+
+        // Uzmanlık grid'ini oluştur
+        const grid = document.getElementById('uzmanlikGrid');
+        UZMANLIKLAR.forEach(u => {
+            const label = document.createElement('label');
+            label.className = 'uzmanlik-item';
+            label.innerHTML = `<input type="checkbox" value="${u}" onchange="checkUzmanlik(this)"> ${u}`;
+            label.querySelector('input').addEventListener('change', function () {
+                label.classList.toggle('selected', this.checked);
+            });
+            grid.appendChild(label);
+        });
+
+        // Max 5 uzmanlık
+        function checkUzmanlik(cb) {
+            const checked = document.querySelectorAll('#uzmanlikGrid input:checked');
+            if (checked.length > 5) {
+                cb.checked = false;
+                cb.closest('.uzmanlik-item').classList.remove('selected');
+                if (window.HakPortal) window.HakPortal.showToast('En fazla 5 uzmanlık alanı seçebilirsiniz.', 'error', 2500);
+            }
+            document.getElementById('uzmanlikError').style.display = 'none';
+        }
+        window.checkUzmanlik = checkUzmanlik;
+
+        // Bio karakter sayacı
+        document.getElementById('avBio').addEventListener('input', function () {
+            const len = this.value.length;
+            const counter = document.getElementById('bioCounter');
+            counter.textContent = `${len} / 500 karakter`;
+            counter.style.color = len > 500 ? '#f87171' : 'var(--text-muted)';
+        });
+
+        // ===== BAŞVURU GÖNDER =====
+        async function avukatBasvur() {
+            const errEl = document.getElementById('avError');
+            errEl.style.display = 'none';
+
+            const unvan = document.getElementById('avUnvan').value;
+            const ad = document.getElementById('avAd').value.trim();
+            const soyad = document.getElementById('avSoyad').value.trim();
+            const email = document.getElementById('avEmail').value.trim();
+            const telefon = document.getElementById('avTelefon').value.trim();
+            const sehir = document.getElementById('avSehir').value;
+            const baro = document.getElementById('avBaro').value;
+            const baroNo = document.getElementById('avBaroNo').value.trim();
+            const sicilNo = document.getElementById('avSicilNo').value.trim();
+            const mezuniyetYili = parseInt(document.getElementById('avMezuniyetYili').value) || null;
+            const deneyimYil = parseInt(document.getElementById('avDeneyimYil').value) || 0;
+            const bio = document.getElementById('avBio').value.trim();
+            const password = document.getElementById('avPassword').value;
+            const passwordConfirm = document.getElementById('avPasswordConfirm').value;
+            const kvkk = document.getElementById('avKvkk').checked;
+
+            const uzmanlikChecked = [...document.querySelectorAll('#uzmanlikGrid input:checked')].map(c => c.value);
+            const btn = document.getElementById('avBasvuruBtn');
+
+            // Ön yüz validasyonları
+            function showErr(msg) {
+                errEl.textContent = msg;
+                errEl.style.display = 'block';
+                errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            if (!ad || !soyad) { showErr('Ad ve soyad zorunludur.'); return; }
+            if (!email) { showErr('E-posta zorunludur.'); return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Geçerli bir e-posta adresi girin.'); return; }
+            if (!telefon) { showErr('Telefon numarası zorunludur.'); return; }
+            if (!sehir) { showErr('Faaliyet gösterdiğiniz şehri seçin.'); return; }
+            if (!baro) { showErr('Baro seçimi zorunludur.'); return; }
+            if (!baroNo) { showErr('Baro sicil numarası zorunludur.'); return; }
+            if (!mezuniyetYili || mezuniyetYili < 1970) { showErr('Geçerli bir mezuniyet yılı girin.'); return; }
+            if (uzmanlikChecked.length === 0) {
+                document.getElementById('uzmanlikError').style.display = 'block';
+                showErr('En az 1 uzmanlık alanı seçmelisiniz.');
+                return;
+            }
+            if (!bio || bio.length < 30) { showErr('Hakkınızda alanı en az 30 karakter olmalıdır.'); return; }
+            if (bio.length > 500) { showErr('Hakkınızda alanı en fazla 500 karakter olabilir.'); return; }
+            if (!password) { showErr('Şifre zorunludur.'); return; }
+            if (password.length < 8) { showErr('Şifre en az 8 karakter olmalıdır.'); return; }
+            if (password !== passwordConfirm) { showErr('Şifreler eşleşmiyor.'); return; }
+            if (!kvkk) { showErr('KVKK ve Kullanım Şartları\'nı kabul etmelisiniz.'); return; }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Başvuru gönderiliyor...';
+
+            try {
+                await window.HakPortal.apiCall('POST', '/auth/avukat-basvuru', {
+                    ad, soyad, email, password, passwordConfirm,
+                    telefon, sehir, unvan,
+                    baro, baroNo, sicilNo,
+                    mezuniyetYili, deneyimYil,
+                    uzmanlik: uzmanlikChecked,
+                    bio
+                });
+
+                // Başarı ekranı
+                document.getElementById('avukatFormCard').style.display = 'none';
+                const sc = document.getElementById('successCard');
+                sc.style.display = 'block';
+                document.getElementById('successEmail').textContent = email;
+                sc.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (err) {
+                showErr(err.message);
+                btn.disabled = false;
+                btn.textContent = '⚖️ Başvurumu Gönder';
+            }
+        }
+
+        window.avukatBasvur = avukatBasvur;
+    </script>
+</body>
+
+</html>

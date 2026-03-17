@@ -1,0 +1,535 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kullanıcı Paneli – HakPortal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/panel.css" />
+</head>
+
+<body>
+
+    <nav class="navbar scrolled" id="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">&#x2696;&#xFE0F;</span>
+                <span class="logo-text">Hak<span class="logo-accent">Portal</span></span>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <span id="navUserName" style="color:var(--text-secondary);font-size:0.9rem;margin-right:8px;"></span>
+                <button class="nav-btn-outline" onclick="window.location.href='/'">Ana Sayfa</button>
+                <button class="nav-btn-outline nav-btn-danger" onclick="logout()">Çıkış</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px;">
+                <!-- BİLDİRİM ZİLİ -->
+                <div id="notifWrapper" style="position:relative;display:inline-flex;align-items:center;">
+                    <button id="notifBtn" onclick="toggleNotifDropdown()"
+                        style="position:relative;background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--text-secondary);transition:all 0.2s;"
+                        title="Bildirimler"
+                        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+                        onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='var(--text-secondary)'">
+                        🔔
+                        <span id="notifBadge"
+                            style="display:none;position:absolute;top:-4px;right:-4px;background:#e63946;color:#fff;font-size:0.6rem;font-weight:800;padding:1px 4px;border-radius:99px;min-width:16px;text-align:center;box-shadow:0 0 6px rgba(230,57,70,0.7);">0</span>
+                    </button>
+                    <!-- BİLDİRİM DROPDOWN -->
+                    <div id="notifDropdown"
+                        style="display:none;position:absolute;top:44px;right:0;width:340px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:9999;overflow:hidden;">
+                        <div
+                            style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);">
+                            <strong style="font-size:0.9rem;">🔔 Bildirimler</strong>
+                            <button onclick="tumunuOku()"
+                                style="font-size:0.75rem;color:var(--accent);background:none;border:none;cursor:pointer;">Tümünü
+                                Okundu İşaretle</button>
+                        </div>
+                        <div id="notifListesi" style="max-height:320px;overflow-y:auto;">
+                            <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:0.85rem;">
+                                Bildirim yükleniyor...</div>
+                        </div>
+                    </div>
+                </div>
+                <button class="hamburger" id="hamburger"
+                    onclick="toggleMenu()"><span></span><span></span><span></span></button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="panel-layout">
+        <!-- SIDEBAR -->
+        <aside class="panel-sidebar">
+            <div class="panel-sidebar-title">Menü</div>
+            <button class="sidebar-link active" onclick="showSection('davalarim')" id="sidebarDavalarim">
+                📋 Davalarım
+            </button>
+            <button class="sidebar-link" onclick="showSection('yeniHesaplama')" id="sidebarYeniHesaplama">
+                🧮 Yeni Hesaplama
+            </button>
+            <button class="sidebar-link" onclick="showSection('mesajlarim')" id="sidebarMesajlarim"
+                style="display:flex;align-items:center;justify-content:space-between;">
+                <span>💬 Mesajlarım</span>
+                <span id="mesajBadge"
+                    style="display:none;background:#e63946;color:#fff;font-size:0.65rem;font-weight:800;padding:1px 6px;border-radius:99px;min-width:18px;text-align:center;box-shadow:0 0 6px rgba(230,57,70,0.6);"></span>
+            </button>
+
+            <div class="panel-sidebar-title">Hesap</div>
+            <button class="sidebar-link" onclick="showSection('profil')" id="sidebarProfil">
+                👤 Profilim
+            </button>
+            <button class="sidebar-link" onclick="logout()">
+                🚪 Çıkış Yap
+            </button>
+        </aside>
+
+        <!-- ANA İÇERİK -->
+        <main class="panel-main">
+            <!-- DAVALARIM -->
+            <div id="sectionDavalarim">
+                <div class="panel-header">
+                    <div>
+                        <h1 class="panel-title">Davalarım</h1>
+                        <p class="panel-subtitle">Tüm dava dosyalarınızı buradan takip edin.</p>
+                    </div>
+                    <button class="btn-primary" onclick="showSection('yeniHesaplama')">+ Yeni Hesaplama</button>
+                </div>
+                <div id="davalarListesi">
+                    <div class="empty-state">
+                        <div class="empty-icon">📂</div>
+                        <div class="empty-title">Henüz dava dosyanız yok.</div>
+                        <div class="empty-sub">Hesaplama yapın ve avukat teklifleri alın.</div>
+                        <br />
+                        <button class="btn-primary" onclick="showSection('yeniHesaplama')">Hesaplamaya Başla</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TEKLİFLER (dava seçilince açılır) -->
+            <div id="sectionTeklifler" style="display:none">
+                <div class="panel-header">
+                    <div>
+                        <button class="btn-ghost" onclick="showSection('davalarim')" style="margin-bottom:12px;">←
+                            Davalara Dön</button>
+                        <h1 class="panel-title">Avukat Teklifleri</h1>
+                        <p class="panel-subtitle" id="teklifSubtitle">Anonim teklifleri karşılaştırın ve en uygununu
+                            seçin.</p>
+                    </div>
+                </div>
+                <div id="tekliflerListesi"></div>
+            </div>
+
+            <!-- ÖDEME -->
+            <div id="sectionOdeme" style="display:none">
+                <div class="panel-header">
+                    <div>
+                        <button class="btn-ghost" onclick="showSection('teklifler')" style="margin-bottom:12px;">←
+                            Tekliflere Dön</button>
+                        <h1 class="panel-title">Platform Hizmet Bedeli</h1>
+                        <p class="panel-subtitle">Avukat iletişim bilgilerine erişmek için ödeme yapın.</p>
+                    </div>
+                </div>
+                <div class="odeme-wrapper">
+                    <div class="odeme-info-card" id="odemeInfoCard"></div>
+                    <div class="odeme-form-card">
+                        <h3>💳 Kart Bilgileri</h3>
+                        <div class="form-group">
+                            <label class="form-label">Kart Numarası</label>
+                            <input type="text" class="form-input" id="kartNo" placeholder="0000 0000 0000 0000"
+                                maxlength="19" />
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Son Kullanma</label>
+                                <input type="text" class="form-input" id="sonKullanma" placeholder="11 / 32"
+                                    maxlength="7" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">CVV</label>
+                                <input type="text" class="form-input" id="cvv" placeholder="123" maxlength="3" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Kart Sahibi</label>
+                            <input type="text" class="form-input" id="kartSahibi" placeholder="Ad Soyad" />
+                        </div>
+                        <div class="odeme-disclaimer">
+                            🔒 Ödeme bilgileriniz güvende. Bu sistem sadece MVP demo amaçlıdır.
+                            Gerçek ödeme entegrasyonu için İyzico/Stripe kullanılacaktır.
+                        </div>
+                        <button class="btn-primary btn-block" onclick="doOdeme()" id="odemeBtn">
+                            Ödemeyi Tamamla
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MESAJLARIM -->
+            <div id="sectionMesajlarim" style="display:none">
+                <div class="panel-header">
+                    <h1 class="panel-title">Mesajlarım</h1>
+                </div>
+                <div id="mesajlarListesi">
+                    <div class="empty-state">
+                        <div class="empty-icon">💬</div>
+                        <div class="empty-title">Henüz mesajınız yok.</div>
+                        <div class="empty-sub">Ödeme tamamlandıktan sonra avukatınızla mesajlaşabilirsiniz.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- YENİ HESAPLAMA -->
+            <div id="sectionYeniHesaplama" style="display:none">
+                <div class="panel-header">
+                    <h1 class="panel-title">Yeni Hesaplama</h1>
+                </div>
+                <style>
+                    #mainCalcWrapper {
+                        grid-template-columns: 1fr !important;
+                        gap: 20px !important;
+                        max-width: 800px !important;
+                        margin: 0 auto;
+                    }
+
+                    @media (max-width: 768px) {
+                        #mainCalcWrapper {
+                            grid-template-columns: 1fr !important;
+                            gap: 20px !important;
+                        }
+                    }
+
+                    .form-input[type="date"]::-webkit-calendar-picker-indicator {
+                        filter: invert(1);
+                        opacity: 0.6;
+                        cursor: pointer;
+                        font-family: inherit;
+                    }
+
+                    .form-input[type="date"] {
+                        font-family: 'Inter', sans-serif;
+                    }
+
+                    .form-input[type="number"]::-webkit-inner-spin-button,
+                    .form-input[type="number"]::-webkit-outer-spin-button {
+                        -webkit-appearance: none;
+                        margin: 0;
+                    }
+
+                    .form-input[type="number"] {
+                        -moz-appearance: textfield;
+                        appearance: textfield;
+                    }
+                </style>
+
+                <!-- ÖN DEĞERLENDİRME (PRE-TEST) -->
+                <div id="preTestContainer"
+                    style="max-width:600px; margin:20px auto; padding:40px; border-radius:12px; background:var(--bg-surface); text-align:center; border:1px solid var(--border); box-shadow:0 4px 20px rgba(0,0,0,0.05);">
+                    <div style="font-size:3rem; margin-bottom:15px;">🔍</div>
+                    <h2 style="margin-bottom:15px; font-weight:700;">Ön Değerlendirme Testi</h2>
+                    <p style="color:var(--text-secondary); margin-bottom:30px; line-height:1.5; font-size:0.95rem;">
+                        Hukuki sürecinizin başlatılabilmesi ve sistemin davanızı işleme alabilmesi için önce genel dosya
+                        durumunuzu analiz etmemiz gerekiyor.
+                    </p>
+                    <div class="form-group" style="text-align:left; margin-bottom:20px;">
+                        <label class="form-label" style="font-weight:600;">İşten kim çıkardı?</label>
+                        <select id="ptKimCikardi" class="form-select"
+                            style="padding:12px; font-size:0.95rem; width:100%;">
+                            <option value="">Lütfen seçiniz...</option>
+                            <option value="ben">Ben kendi isteğimle (istifa ederek) ayrıldım</option>
+                            <option value="isveren">İşveren (Patron) işime son verdi</option>
+                            <option value="anlasma">Anlaşarak / ikale ile ayrıldık</option>
+                            <option value="diger">Askerlik / Emeklilik / Evlilik sebebiyle ayrıldım</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="text-align:left; margin-bottom:20px;">
+                        <label class="form-label" style="font-weight:600;">Aynı işyerinde kaç yıl çalıştınız?</label>
+                        <select id="ptSure" class="form-select" style="padding:12px; font-size:0.95rem; width:100%;">
+                            <option value="">Lütfen seçiniz...</option>
+                            <option value="az">6 aydan daha az</option>
+                            <option value="orta">6 ay - 1 yıl arası</option>
+                            <option value="cok">1 yıldan fazla (Uzun süreli)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="text-align:left; margin-bottom:30px;">
+                        <label class="form-label" style="font-weight:600;">Maaşınız yaklaşık ne kadardı?</label>
+                        <select id="ptMaas" class="form-select" style="padding:12px; font-size:0.95rem; width:100%;">
+                            <option value="">Lütfen seçiniz...</option>
+                            <option value="alti">Asgari ücretin altındaydı</option>
+                            <option value="ustu">Asgari ücret veya daha üzerindeydi</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary" style="width:100%; padding:14px; font-size:1rem; font-weight:600;"
+                        onclick="window.evaluatePreTest()">Testi Tamamla ve İlerle ➔</button>
+                </div>
+
+                <!-- GERÇEK HESAPLAMA FORMU (Ön test geçilince açılır) -->
+                <div id="mainCalcWrapper" class="calc-wrapper" style="display:none;">
+                    <div class="calc-form-side" style="width:100%; min-height:520px;">
+                        <h2 class="calc-form-title"><span>⚖️</span> Tazminat Hesaplama</h2>
+                        <form id="panelHesaplamaForm" autocomplete="off">
+                            <!-- AKILLI DAVA ASİSTANI (WIZARD) -->
+                            <div class="form-group"
+                                style="background:var(--bg-surface); padding:15px; border-radius:10px; border:1px solid var(--border); margin-bottom:20px;">
+                                <label class="form-label" style="display:flex; align-items:center; gap:8px;">
+                                    <span style="font-size:1.2rem;">🤖</span>
+                                    <div>
+                                        <div style="color:var(--primary); font-weight:700;">Akıllı Karar Asistanı</div>
+                                        <div
+                                            style="font-size:0.75rem; color:var(--text-muted); font-weight:normal; margin-top:2px;">
+                                            Sizi adım adım yönlendirerek hukuki senaryonuzu çıkaracağız.</div>
+                                    </div>
+                                </label>
+                                <div id="aiWizardContainer" style="margin-top:15px;"></div>
+                                <input type="hidden" id="cikisSekli" name="cikisSekli" required>
+                                <input type="hidden" id="aiFacts" name="aiFacts">
+                            </div>
+                            <!-- WIZARD END -->
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">İşe Giriş Tarihi <span class="required">*</span></label>
+                                    <input type="date" class="form-input" id="pIsGirisTarihi" required />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">İşten Çıkış Tarihi <span class="required">*</span></label>
+                                    <input type="date" class="form-input" id="pIsCikisTarihi" required />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Aylık Brüt Maaş (₺) <span
+                                            class="required">*</span></label>
+                                    <div class="input-with-icon">
+                                        <span class="input-icon">₺</span>
+                                        <input type="number" class="form-input with-icon" id="pBrutMaas"
+                                            placeholder="Örn: 25000" min="1" required />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Aylık Yan Haklar (₺)</label>
+                                    <div class="input-with-icon">
+                                        <span class="input-icon">₺</span>
+                                        <input type="number" class="form-input with-icon" id="pYanHaklar"
+                                            placeholder="Yemek, yol vb." min="0" />
+                                    </div>
+                                </div>
+                            </div>
+                            <p
+                                style="font-size:0.75rem; color:var(--text-muted); margin-top:-10px; margin-bottom:15px;">
+                                * Tazminatlar <strong>Giydirilmiş Brüt Ücret</strong> üzerinden hesaplanır (Maaş + Yan
+                                Haklar).
+                            </p>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Kullanılmayan İzin (Gün)</label>
+                                    <input type="number" class="form-input" id="pKullanilmayanIzin"
+                                        placeholder="Örn: 14" min="0" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Fazla Mesai (Saat)</label>
+                                    <input type="number" class="form-input" id="pFazlaMesai" placeholder="Örn: 50"
+                                        min="0" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Ödenmemiş Maaş (Gün)</label>
+                                    <input type="number" class="form-input" id="pOdenmemisMaasGun"
+                                        placeholder="İçeride kalan maaş gün sayısı" min="0" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Kümülatif Vergi Matrahı (₺)</label>
+                                    <input type="number" class="form-input" id="pKumulatifMatrah"
+                                        placeholder="Yoksa 0 bırakın" min="0" />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-primary btn-block" id="pHesaplaBtn">
+                                <span id="pHesaplaBtnText">Hesapla →</span>
+                                <span id="pHesaplaSpinner" class="spinner" style="display:none"></span>
+                            </button>
+                        </form>
+                    </div><!-- /.calc-form-side -->
+
+                    <!-- YAN TARAF SONUÇ ALANI -->
+                    <div class="calc-result-side" id="panelResultArea" style="width:100%; display:none;">
+                        <div class="result-header">
+                            <h3>📊 Hesaplama Sonucu</h3>
+                            <span class="result-badge">TAHMİNİ</span>
+                        </div>
+                        <div id="pResultSure"></div>
+                        <div id="pResultCards"></div>
+                        <div id="pResultTotal"></div>
+                        <div class="result-actions">
+                            <button class="btn-primary btn-block" id="pAvukatTeklifBtn" onclick="goTeklifModal()"
+                                style="display:none">
+                                <span>⚖️ Avukatlardan Teklif Al</span>
+                            </button>
+                            <button class="btn-ghost btn-block" onclick="resetPanelForm()">Yeniden Hesapla</button>
+                        </div>
+                    </div><!-- /.calc-result-side -->
+                </div> <!-- /mainCalcWrapper -->
+            </div><!-- /sectionYeniHesaplama -->
+
+            <!-- PROFİL -->
+            <div id="sectionProfil" style="display:none">
+                <div class="panel-header">
+                    <h1 class="panel-title">Profilim</h1>
+                </div>
+
+                <!-- Profil Sekmeleri -->
+                <div
+                    style="display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0">
+                    <button id="pTabBilgi" class="profil-tab active" onclick="switchProfilTab('bilgi')">📋
+                        Bilgilerim</button>
+                    <button id="pTabDuzenle" class="profil-tab" onclick="switchProfilTab('duzenle')">✏️ Düzenle</button>
+                    <button id="pTabSifre" class="profil-tab" onclick="switchProfilTab('sifre')">🔒 Şifre
+                        Değiştir</button>
+                </div>
+
+                <!-- Bilgi Görüntüleme -->
+                <div id="profilTabBilgi">
+                    <div class="profil-card">
+                        <div class="profil-avatar" id="profilAvatar"></div>
+                        <div id="profilBilgi"></div>
+                    </div>
+                </div>
+
+                <div id="profilTab3d" style="display:none"></div>
+
+                <!-- Profil Düzenleme Formu -->
+                <div id="profilTabDuzenle" style="display:none">
+                    <div class="profil-card">
+                        <div class="profil-avatar-edit-container">
+                            <div class="profil-avatar-preview" id="pAvatarPreview"
+                                onclick="document.getElementById('pAvatarFile').click()"
+                                style="background:none; box-shadow:none; cursor:pointer; position:relative;"
+                                title="Fotoğraf Değiştir">
+                                <img src="" id="pAvatarImg"
+                                    style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
+                                <div class="avatar-edit-overlay">📷</div>
+                            </div>
+                            <input type="file" id="pAvatarFile" style="display:none" accept="image/*"
+                                onchange="previewProfilePhoto(this)" />
+                            <p style="font-size:0.7rem; color:var(--text-muted); margin-top:5px;">Fotoğrafı değiştirmek
+                                için tıklayın</p>
+                        </div>
+                        <h3 style="font-size:1rem;font-weight:700;margin-bottom:20px;text-align:center">Profil
+                            Bilgilerini Düzenle</h3>
+                        <form id="profilDuzenleForm" onsubmit="profilKaydet(event)">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Ad <span class="required">*</span></label>
+                                    <input type="text" class="form-input" id="pAd" placeholder="Adınız" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Soyad <span class="required">*</span></label>
+                                    <input type="text" class="form-input" id="pSoyad" placeholder="Soyadınız" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Telefon</label>
+                                    <input type="tel" class="form-input" id="pTelefon" placeholder="05xx xxx xx xx" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Şehir <span class="required">*</span></label>
+                                    <select class="form-select" id="pSehir">
+                                        <option value="">Seçin...</option>
+                                        <option>Adana</option>
+                                        <option>Ankara</option>
+                                        <option>Antalya</option>
+                                        <option>Bursa</option>
+                                        <option>Diyarbakır</option>
+                                        <option>Eskişehir</option>
+                                        <option>Gaziantep</option>
+                                        <option>İstanbul</option>
+                                        <option>İzmir</option>
+                                        <option>Kayseri</option>
+                                        <option>Kocaeli</option>
+                                        <option>Konya</option>
+                                        <option>Malatya</option>
+                                        <option>Mersin</option>
+                                        <option>Samsun</option>
+                                        <option>Şanlıurfa</option>
+                                        <option>Trabzon</option>
+                                        <option>Diğer</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Adres (Opsiyonel)</label>
+                                <input type="text" class="form-input" id="pAdres" placeholder="Mahalle, Cadde..." />
+                            </div>
+                            <div id="profilDuzenleError" class="modal-error" style="display:none"></div>
+                            <div style="display:flex;gap:12px;margin-top:8px">
+                                <button type="submit" class="btn-primary" id="profilKaydetBtn">Değişiklikleri
+                                    Kaydet</button>
+                                <button type="button" class="btn-ghost"
+                                    onclick="switchProfilTab('bilgi')">İptal</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Şifre Değiştir -->
+                <div id="profilTabSifre" style="display:none">
+                    <div class="profil-card" style="max-width:480px">
+                        <h3 style="font-size:1rem;font-weight:700;margin-bottom:20px">Şifre Değiştir</h3>
+                        <form id="sifreDegistirForm" onsubmit="sifreDegistir(event)">
+                            <div class="form-group">
+                                <label class="form-label">Mevcut Şifre</label>
+                                <input type="password" class="form-input" id="eskiSifre"
+                                    placeholder="Mevcut şifreniz" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Yeni Şifre</label>
+                                <input type="password" class="form-input" id="yeniSifre"
+                                    placeholder="En az 8 karakter" />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Yeni Şifre Tekrar</label>
+                                <input type="password" class="form-input" id="yeniSifreConfirm"
+                                    placeholder="Yeni şifreyi tekrar girin" />
+                            </div>
+                            <div id="sifreHata" class="modal-error" style="display:none"></div>
+                            <button type="submit" class="btn-primary" id="sifreDegistirBtn">Şifremi Değiştir</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div id="avatarDesignerModal" class="modal-overlay" style="display:none"></div>
+
+    <!-- AVUKAT TEKLİF MODAL PANEL -->
+    <div class="modal-overlay" id="teklifModalPanel" style="display:none">
+        <div class="modal modal-lg">
+            <button class="modal-close" onclick="closeModal('teklifModalPanel')">✕</button>
+            <h3 class="modal-title">⚖️ Avukatlardan Teklif Al</h3>
+            <p class="modal-subtitle">Hesapladığınız davanızı şimdi platformdaki yörenizin avukatlarına doğrudan sunun.
+            </p>
+            <div class="form-group">
+                <label class="form-label">Dava Türü Seçin</label>
+                <select class="form-select" id="pTeklifDavaTuru">
+                    <option value="kıdem-ihbar">Kıdem / İhbar Tazminatı</option>
+                    <option value="fazla-mesai">Fazla Mesai</option>
+                    <option value="yillik-izin">Yıllık İzin</option>
+                    <option value="ucret-alacagi">Ücret Alacağı</option>
+                    <option value="diger">Diğer</option>
+                </select>
+            </div>
+            <div class="modal-info-box">
+                <strong>🔒 Güvence:</strong> Şehir bilginiz doğrudan profilinizden tespit edilir. Kişisel ve iletişim
+                verileriniz avukatlara kesinlikle <u>gösterilmez</u>. Sadece karşılıklı onayda açılır.
+            </div>
+            <div class="modal-error" id="pTeklifError" style="display:none"></div>
+            <button class="btn-primary btn-block" onclick="goTeklifModalAPI()">Dava Dosyasını Avukatlara Çıkar</button>
+        </div>
+    </div>
+
+    <script src="/js/app.js?v=2.2"></script>
+    <script src="/js/legal-engine.js?v=2.2"></script>
+    <script src="/js/panel.js?v=2.2"></script>
+</body>
+
+</html>

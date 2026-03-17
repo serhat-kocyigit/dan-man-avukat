@@ -1,0 +1,1552 @@
+/* =============================================
+   HakPortal - Panel CSS
+   ============================================= */
+
+/* ══════════════════════════════════════════
+   3D AVATAR PANELİ — Three.js + Ready Player Me
+   ══════════════════════════════════════════ */
+
+.avatar3d-panel {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    min-height: 520px;
+}
+
+@media (max-width: 860px) {
+    .avatar3d-panel {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Three.js canvas wrap */
+.avatar3d-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.avatar3d-canvas-wrap {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    aspect-ratio: 3/4;
+    max-height: 480px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .4);
+}
+
+#avatar3dCanvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+/* Loading / placeholder overlay */
+.avatar3d-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: linear-gradient(135deg, #0f0c29dd, #302b63dd);
+    color: #fff;
+    font-size: 0.95rem;
+    z-index: 10;
+    text-align: center;
+    padding: 20px;
+}
+
+.avatar3d-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 6px 0;
+}
+
+/* Sağ kontrol panel */
+.avatar3d-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    border: 1px solid var(--border);
+}
+
+.avatar3d-badge {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(108, 99, 255, .12), rgba(108, 99, 255, .04));
+    border-radius: 14px;
+    border: 1px solid rgba(108, 99, 255, .2);
+}
+
+.avatar3d-badge>span {
+    font-size: 2rem;
+}
+
+.avatar3d-badge strong {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 2px;
+}
+
+.avatar3d-badge p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Adımlar */
+.avatar3d-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.avatar3d-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.step-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.avatar3d-step strong {
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: block;
+}
+
+.avatar3d-step p {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin: 2px 0 0;
+}
+
+/* RPM Ana Buton */
+.btn-rpm {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #6c63ff, #a18cd1);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .3s ease;
+    box-shadow: 0 6px 24px rgba(108, 99, 255, .4);
+}
+
+.btn-rpm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 32px rgba(108, 99, 255, .55);
+}
+
+.rpm-arrow {
+    font-size: 1.2rem;
+}
+
+.avatar3d-credit {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin: 0;
+}
+
+.avatar3d-credit a {
+    color: var(--primary-light);
+    text-decoration: none;
+}
+
+.avatar3d-credit a:hover {
+    text-decoration: underline;
+}
+
+/* ══════════════════════════════════════════
+   RPM MODALİ (iframe)
+   ══════════════════════════════════════════ */
+.rpm-modal {
+    background: #1a1a2e;
+    border-radius: 20px;
+    width: 95%;
+    max-width: 900px;
+    height: 90vh;
+    max-height: 800px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .6);
+    animation: rpmSlideIn .3s ease;
+}
+
+@keyframes rpmSlideIn {
+    from {
+        transform: translateY(30px) scale(.97);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+.rpm-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, .1);
+    flex-shrink: 0;
+}
+
+.rpm-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.rpm-free-badge {
+    font-size: 0.65rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+    color: #062d1c;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: .5px;
+}
+
+.rpm-modal-body {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+}
+
+.rpm-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: rgba(255, 255, 255, .7);
+    z-index: 5;
+    background: #1a1a2e;
+}
+
+.rpm-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    position: relative;
+    z-index: 10;
+}
+
+/* Spinner */
+.rpm-spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(108, 99, 255, .2);
+    border-top-color: #6c63ff;
+    border-radius: 50%;
+    animation: rpmSpin .8s linear infinite;
+}
+
+@keyframes rpmSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+
+/* ÖDEME */
+.odeme-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 800px;
+}
+
+.odeme-info-card {
+    background: var(--bg-card);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+}
+
+.odeme-form-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+}
+
+.odeme-form-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.odeme-disclaimer {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding: 10px 14px;
+    background: rgba(108, 99, 255, 0.08);
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+/* TEKLİF KARTLARI */
+.teklif-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.teklif-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.teklif-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-glow);
+}
+
+.teklif-card.selected {
+    border-color: var(--accent);
+    background: rgba(0, 217, 163, 0.07);
+}
+
+.teklif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.teklif-no {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary-light);
+    background: rgba(108, 99, 255, 0.15);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.teklif-ucret {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.teklif-model {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.teklif-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 16px 0;
+    padding: 12px;
+    background: var(--bg-surface);
+    border-radius: var(--radius-sm);
+}
+
+.teklif-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+}
+
+.teklif-detail-row span:first-child {
+    color: var(--text-muted);
+}
+
+.teklif-detail-row span:last-child {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.teklif-aciklama {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    border-left: 2px solid var(--border);
+}
+
+/* DAVA KARTLARI */
+.dava-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.dava-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    transition: var(--transition);
+}
+
+.dava-card:hover {
+    border-color: var(--border-hover);
+    box-shadow: var(--shadow-md);
+}
+
+.dava-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.dava-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.dava-card-sub {
+    font-size: 0.83rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.dava-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.dava-detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.dava-detail-row span:first-child {
+    color: var(--text-muted);
+}
+
+.dava-detail-row span:last-child {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.dava-detail-row .alacak {
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 800;
+}
+
+.dava-card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* MESAJLAşMA */
+.mesaj-dava-listesi {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.mesaj-dava-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.mesaj-dava-item:hover {
+    border-color: var(--primary);
+}
+
+/* PROFİL */
+.profil-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.profil-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: white;
+}
+
+.profil-bilgi-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+.profil-bilgi-item span:first-child {
+    color: var(--text-muted);
+}
+
+.profil-bilgi-item span:last-child {
+    font-weight: 600;
+}
+
+/* AVUKAT PANEL - Teklif Formu */
+.avukat-teklif-form {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    max-width: 560px;
+}
+
+.avukat-teklif-form h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+/* ADMIN PANEL */
+.admin-istatistik {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.istatistik-kart {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    text-align: center;
+}
+
+.istatistik-kart .ikon {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+}
+
+.istatistik-kart .sayi {
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: -1px;
+}
+
+.istatistik-kart .etiket {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* AYARLAR */
+.ayarlar-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    max-width: 540px;
+    margin-bottom: 20px;
+}
+
+.ayarlar-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+@media (max-width: 768px) {
+    .odeme-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    #notifDropdown {
+        position: fixed !important;
+        top: 70px !important;
+        left: 10px !important;
+        right: 10px !important;
+        width: auto !important;
+        max-width: none !important;
+        z-index: 1000 !important;
+    }
+
+    .teklif-grid,
+    .dava-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-row,
+    .form-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    .filter-bar {
+        flex-direction: column;
+    }
+
+    .filter-bar input,
+    .filter-bar select {
+        width: 100%;
+    }
+
+    .modal {
+        padding: 20px;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .messages-container {
+        height: 400px;
+    }
+
+    .table-wrapper td,
+    .table-wrapper th {
+        padding: 8px 10px;
+    }
+
+    .send-text {
+        display: none;
+    }
+
+    #sendBtn,
+    #avSendBtn {
+        padding: 10px 14px !important;
+    }
+}
+
+/* AVUKAT DURUM UYARISI */
+.onay-bekleniyor {
+    background: rgba(255, 165, 2, 0.1);
+    border: 1px solid rgba(255, 165, 2, 0.3);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    text-align: center;
+}
+
+.onay-bekleniyor .icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.onay-bekleniyor h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.onay-bekleniyor p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* LOADING SPINNER */
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 16px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* MESAJ CONTAINER */
+.messages-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 260px);
+    min-height: 400px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.messages-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-surface);
+}
+
+.messages-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    scroll-behavior: smooth;
+}
+
+.messages-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.messages-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.messages-body::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+
+.messages-input {
+    display: flex;
+    gap: 10px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-surface);
+}
+
+.messages-input input {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.messages-input input:focus {
+    border-color: var(--primary);
+}
+
+.messages-input input::placeholder {
+    color: var(--text-muted);
+}
+
+/* MESAJ BALONCUKLARI */
+.message-row {
+    display: flex;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.message-row.mine {
+    justify-content: flex-end;
+}
+
+.message-row.theirs {
+    justify-content: flex-start;
+}
+
+.message-bubble {
+    max-width: 68%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    position: relative;
+    word-break: break-word;
+}
+
+.message-bubble.sent {
+    background: linear-gradient(135deg, var(--primary) 0%, #5a52e0 100%);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message-bubble.received {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+}
+
+.message-time {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-top: 4px;
+    text-align: right;
+}
+
+/* STATUS BADGES EKSIKLER */
+.status-badge.status-OPEN {
+    background: rgba(108, 99, 255, 0.15);
+    color: var(--primary-light);
+}
+
+.status-badge.status-WAITING_PAYMENT {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+}
+
+.status-badge.status-ACTIVE {
+    background: rgba(0, 217, 163, 0.15);
+    color: var(--accent);
+}
+
+.status-badge.status-KAPANDI {
+    background: rgba(100, 100, 100, 0.15);
+    color: var(--text-muted);
+}
+
+.status-badge.status-PENDING {
+    background: rgba(234, 179, 8, 0.15);
+    color: #fbbf24;
+}
+
+.status-badge.status-SELECTED {
+    background: rgba(0, 217, 163, 0.15);
+    color: var(--accent);
+}
+
+.status-badge.status-REJECTED {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+}
+
+/* TABLE */
+.table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+}
+
+.table-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.table-wrapper th {
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--bg-surface);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.table-wrapper td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    vertical-align: middle;
+}
+
+.table-wrapper tr:last-child td {
+    border-bottom: none;
+}
+
+.table-wrapper tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+/* PANEL HESAPLAMA result */
+.panel-calc-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.result-total {
+    background: linear-gradient(135deg, rgba(108, 99, 255, 0.15), rgba(0, 217, 163, 0.1));
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.total-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.total-amount {
+    display: block;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--accent);
+    letter-spacing: -1px;
+}
+
+.result-disclaimer {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    padding: 10px 14px;
+    background: rgba(108, 99, 255, 0.06);
+    border-radius: var(--radius-sm);
+    line-height: 1.5;
+}
+
+/* EMPTY STATE */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.empty-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.empty-sub {
+    font-size: 0.87rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* ---- PROFİL SEKME ---- */
+.profil-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-muted);
+    font-size: 0.87rem;
+    font-weight: 600;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    margin-bottom: -1px;
+}
+
+.profil-tab:hover {
+    color: var(--text-primary);
+    background: rgba(99, 102, 241, 0.06);
+    border-radius: 8px 8px 0 0;
+}
+
+.profil-tab.active {
+    color: var(--primary-light);
+    border-bottom-color: var(--primary-light);
+    background: rgba(99, 102, 241, 0.08);
+    border-radius: 8px 8px 0 0;
+}
+
+/* ---- PROFİL KART ---- */
+.profil-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    max-width: 600px;
+}
+
+.profil-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.profil-bilgi-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    font-size: 0.9rem;
+    gap: 16px;
+}
+
+.profil-bilgi-item:last-child {
+    border-bottom: none;
+}
+
+.profil-bilgi-item span:first-child {
+    color: var(--text-muted);
+    flex-shrink: 0;
+    min-width: 100px;
+    font-size: 0.83rem;
+}
+
+.profil-bilgi-item span:last-child {
+    color: var(--text-primary);
+    text-align: right;
+    word-break: break-word;
+}
+
+/* ---- MODAL ERROR (panel içi kullanım için) ---- */
+.modal-error {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #f87171;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+    line-height: 1.5;
+}
+
+.required {
+    color: #f87171;
+    margin-left: 2px;
+}
+
+/* AVATAR SEÇİCİ */
+.avatar-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(45px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px dashed var(--border);
+}
+
+.avatar-option {
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.avatar-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.avatar-option.selected {
+    border-color: var(--primary);
+    background: rgba(108, 99, 255, 0.15);
+}
+
+.profil-avatar-edit-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+/* AVATAR DESIGNER */
+.avatar-designer-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 20px;
+    height: 500px;
+}
+
+.designer-preview-box {
+    background: linear-gradient(135deg, var(--bg-surface), var(--bg-body));
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    position: relative;
+    padding: 20px;
+}
+
+
+
+.designer-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.designer-category {
+    margin-bottom: 20px;
+}
+
+.category-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 8px;
+}
+
+.option-cell {
+    aspect-ratio: 1;
+    background: var(--bg-surface);
+    border: 2px solid transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    overflow: hidden;
+}
+
+.option-cell:hover {
+    border-color: var(--border);
+}
+
+.option-cell.active {
+    border-color: var(--primary);
+    background: rgba(108, 99, 255, 0.1);
+}
+
+.option-cell img {
+    width: 80%;
+    height: 80%;
+}
+
+.color-option {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+}
+
+.color-option.active {
+    border-color: white;
+    box-shadow: 0 0 0 2px var(--primary);
+}
+
+@media (max-width: 768px) {
+    .avatar-designer-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+}
+
+/* ═══════════════════════════════════════════════
+   AVATAR DESIGNER - Yeni SVG Engine Stili
+   ═══════════════════════════════════════════════ */
+
+/* Ana Konteyner */
+.avatar-designer-container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 20px;
+    height: 540px;
+    min-height: 0;
+    /* Taşma engelleyen kural */
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Önizleme Sol Panel */
+.designer-preview-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.preview-card {
+    flex: 1;
+    background: radial-gradient(ellipse at top, #e8f4fd 0%, #d4e9f7 60%, #c5e0f5 100%);
+    border-radius: 24px;
+    border: 1px solid rgba(108, 99, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.06), 0 4px 20px rgba(108, 99, 255, 0.08);
+}
+
+/* Inline SVG önizleme alanı */
+.avatar-preview-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-preview-inner svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.12));
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.avatar-preview-inner svg:hover {
+    transform: scale(1.03) translateY(-4px);
+}
+
+.btn-save-avatar {
+    font-size: 0.95rem;
+    padding: 14px;
+    border-radius: 14px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
+}
+
+/* Editör Sağ Panel */
+.designer-editor-section {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* Bu iki kural olmadan grid child taşar */
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+/* Kategori Sekme Çubuğu */
+.designer-tabs {
+    display: flex;
+    gap: 6px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-shrink: 0;
+}
+
+.designer-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.designer-tab {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.designer-tab:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-primary);
+}
+
+.designer-tab.active {
+    background: rgba(108, 99, 255, 0.15);
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.tab-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+.tab-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Seçenekler Konteyner */
+.designer-options-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* yatay taşmayı engelle */
+    padding-right: 6px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+/* Seçenek Gridi (genel) */
+.options-grid {
+    display: grid;
+    /* minmax'te 1fr son değer olursa otomatik büzülür, taşmaz */
+    grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+    gap: 10px;
+    padding-bottom: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Renk Swatchi (ten, saç rengi, kıyafet rengi, arka plan) */
+.color-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 6px;
+    border-radius: 14px;
+    border: 2px solid transparent;
+    background: var(--bg-surface);
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.color-swatch:hover {
+    border-color: var(--border);
+    transform: translateY(-2px);
+}
+
+.color-swatch.active {
+    border-color: var(--primary);
+    background: rgba(108, 99, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+}
+
+.swatch-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    display: block;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.swatch-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-align: center;
+    opacity: 0.7;
+    line-height: 1.2;
+}
+
+/* Stil Hücresi (saç modeli, göz, kıyafet önizlemesi) */
+.style-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    padding: 4px;
+    border-radius: 12px;
+    border: 2px solid transparent;
+    background: var(--bg-surface);
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text-primary);
+    transition: all 0.18s ease;
+    overflow: hidden;
+    /* Hücre kendisi taşmasın */
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.style-cell:hover {
+    border-color: var(--border);
+    transform: translateY(-2px) scale(1.03);
+}
+
+.style-cell.active {
+    border-color: var(--primary);
+    background: rgba(108, 99, 255, 0.1);
+    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+}
+
+.style-cell img {
+    /* SVG boyutu grid hücresinin genişliği kadar, en fazla 80px */
+    width: 100%;
+    max-width: 80px;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.style-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-align: center;
+    opacity: 0.75;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+}
+
+/* Animasyonlar */
+.fade-in {
+    animation: fadeInUp 0.25s ease-out both;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .avatar-designer-container {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .preview-card {
+        height: 300px;
+    }
+
+    .designer-editor-section {
+        max-height: 420px;
+    }
+}
+
+/* Profile Photo Upload Styles */
+.profil-avatar-edit-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.profil-avatar-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 3px solid var(--primary);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
+}
+
+.avatar-edit-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profil-avatar-preview:hover .avatar-edit-overlay {
+    opacity: 1;
+}
