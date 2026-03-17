@@ -38,6 +38,8 @@
             <button class="sidebar-link" onclick="avukatSection('tekliflerim')" id="sbTeklif">📋 Tekliflerim</button>
             <button class="sidebar-link" onclick="avukatSection('aktivDavalar')" id="sbAktif">🟢 Aktif
                 Davalarım</button>
+            <button class="sidebar-link" onclick="avukatSection('kapananDavalar')" id="sbKapanan">🛑 Kapanan
+                Davalar</button>
             <button class="sidebar-link" onclick="avukatSection('mesajlar')" id="sbMesaj"
                 style="display:flex;align-items:center;justify-content:space-between;">
                 <span>💬 Mesajlar</span>
@@ -135,6 +137,20 @@
                         <div class="empty-icon">⏳</div>
                         <div class="empty-title">Henüz aktif dava yok.</div>
                         <div class="empty-sub">Teklifiniz kabul edilip ödeme yapıldıktan sonra burada görünecek.</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- KAPANAN DAVALAR -->
+            <div id="avSectionKapananDavalar" style="display:none">
+                <div class="panel-header">
+                    <h1 class="panel-title">Kapanan Davalar</h1>
+                </div>
+                <div id="avKapananListesi">
+                    <div class="empty-state">
+                        <div class="empty-icon">🛑</div>
+                        <div class="empty-title">Henüz kapanan davanız yok.</div>
+                        <div class="empty-sub">Sonuçlanan veya iptal edilen davalarınız burada listelenecektir.</div>
                     </div>
                 </div>
             </div>

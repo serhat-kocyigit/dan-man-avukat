@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ---- SECTION ----
 function avukatSection(name) {
-  const sections = ['AcikDavalar', 'TeklifVer', 'Tekliflerim', 'AktivDavalar', 'Mesajlar', 'Profil'];
+  const sections = ['AcikDavalar', 'TeklifVer', 'Tekliflerim', 'AktivDavalar', 'KapananDavalar', 'Mesajlar', 'Profil'];
   sections.forEach(s => {
     const el = document.getElementById(`avSection${s}`);
     if (el) el.style.display = 'none';
@@ -76,6 +76,7 @@ function avukatSection(name) {
   if (name === 'acikDavalar') { loadAcikDavalar(); document.getElementById('sbAcik')?.classList.add('active'); }
   if (name === 'tekliflerim') { loadAvTeklifler(); document.getElementById('sbTeklif')?.classList.add('active'); }
   if (name === 'aktivDavalar') { loadAktivDavalar(); document.getElementById('sbAktif')?.classList.add('active'); }
+  if (name === 'kapananDavalar') { loadAvKapananDavalar(); document.getElementById('sbKapanan')?.classList.add('active'); }
   if (name === 'mesajlar') {
     // Eğer zaten bir mesaj penceresi açıksa ve "Mesajlar" menüsüne tekrar basıldıysa listeye dön
     if (activeCaseId && document.getElementById('avMsgBody')) {
@@ -853,6 +854,83 @@ async function loadAktivDavalar() {
     _showToast()(err.message, 'error');
   } finally {
     _avLoading['aktivDavalar'] = false;
+  }
+}
+
+// ---- KAPANAN DAVALAR ----
+async function loadAvKapananDavalar() {
+  const container = document.getElementById('avKapananListesi');
+  if (!container) return;
+  if (_avLoading['kapananDavalar']) return;
+  _avLoading['kapananDavalar'] = true;
+  if (!container.dataset.loaded) {
+    container.innerHTML = '<div class="loading-spinner"><div class="spinner"></div><p>Yükleniyor...</p></div>';
+  }
+
+  try {
+    const teklifler = await _apiCall()('GET', '/avukat/tekliflerim');
+    const secilen = teklifler.filter(t =>
+      t.status === 'SELECTED' &&
+      ['CLOSED', 'KAPANDI', 'CANCELED'].includes(t.caseStatus)
+    );
+
+    if (!secilen.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🛑</div>
+          <div class="empty-title">Henüz kapanan davanız yok.</div>
+          <div class="empty-sub">Sonuçlanan veya iptal edilen davalarınız burada listelenecektir.</div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = `<div class="dava-grid">` +
+      secilen.map(t => `
+        <div class="dava-card" style="border-color:rgba(255,107,107,0.5)">
+          <div class="dava-card-header">
+            <div>
+              <div class="dava-card-title" style="color:#aaa">${t.caseDavaTuru || 'Dava'}</div>
+              <div class="dava-card-sub">${t.caseSehir}</div>
+            </div>
+            <span class="status-badge status-REJECTED">🔒 Dava Dosyası Kapandı</span>
+          </div>
+          <div class="dava-card-body">
+            <div class="dava-detail-row">
+              <span style="color:#888">Tahmini Alacak</span>
+              <span class="alacak" style="color:#888">${_formatTL()(t.tahminiAlacak)}</span>
+            </div>
+            <div class="dava-detail-row">
+              <span style="color:#888">Ücretim</span>
+              <span style="color:#888">${t.ucretModeli === 'yuzde' ? `%${t.oran}` : _formatTL()(Number(t.sabitUcret) || 0)}</span>
+            </div>
+            ${t.muvekkilAd ? `
+            <div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border); display:flex; gap:10px; align-items:center;">
+              <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:#333;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.1rem;color:#777;">
+                ${t.muvekkilAd.charAt(0)}
+              </div>
+              <div style="opacity: 0.7;">
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px">Müvekkil İletişim Bilgileri:</div>
+                <div style="font-size:0.9rem;font-weight:700">Gizli Müvekkil</div>
+                <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;padding:4px 8px;background:rgba(255,255,255,0.04);border-radius:4px;border:1px dashed rgba(255,255,255,0.1);">
+                  🔒 Dosya Kapandığı İçin İletişim Bilgileri Gizlenmiştir
+                </div>
+              </div>
+            </div>
+            ` : ''}
+
+          </div>
+          <div class="dava-card-actions">
+            <button class="btn-ghost btn-block" style="font-size:0.85rem;padding:10px;width:100%;color:#ff6b6b;border-color:rgba(255,107,107,0.3);background:rgba(255,107,107,0.05);cursor:not-allowed;" disabled>
+              🔒 Dosya Kapandı
+            </button>
+          </div>
+        </div>
+      `).join('') + `</div>`;
+    container.dataset.loaded = '1';
+  } catch (err) {
+    _showToast()(err.message, 'error');
+  } finally {
+    _avLoading['kapananDavalar'] = false;
   }
 }
 
