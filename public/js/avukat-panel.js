@@ -558,7 +558,7 @@ async function loadAvTeklifler() {
               </div>
               ${renderDetayliDavaRaporu(t.hesaplamaVerisi, t)}
               ${ispatHtml}
-              ${t.muvekkilAd && !isMatching && !isWaitingUserDeposit && !isWaitingLawyerPayment ? `
+              ${t.muvekkilAd && !isMatching && !isWaitingUserDeposit && !isWaitingLawyerPayment && !['CLOSED', 'KAPANDI', 'CANCELED'].includes(t.caseStatus) ? `
               <div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--border); display:flex; gap:10px; align-items:center;">
                 <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:var(--primary-dark);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.1rem;color:#fff;">
                   ${t.muvekkilAvatar ? `<img src="${t.muvekkilAvatar}" style="width:100%;height:100%;object-fit:cover;">` : t.muvekkilAd.charAt(0)}
@@ -584,7 +584,8 @@ async function loadAvTeklifler() {
                 </div>
               ` : ''}
               ${isWaitingLawyerPayment ? `<button class="btn-primary" style="font-size:0.85rem;padding:10px 16px;width:100%" onclick="openAvukatOdemeModal('${t.id}', ${t.tahminiAlacak})">💸 Platform Bedelini Öde (${t.tahminiAlacak < 20000 ? '750' : t.tahminiAlacak < 50000 ? '1.250' : '2.000'} TL)</button>` : ''}
-              ${t.status === 'SELECTED' && ['PRE_CASE_REVIEW', 'AUTHORIZED', 'ACTIVE', 'LAWYER_ASSIGNED', 'FILED_IN_COURT', 'IN_PROGRESS', 'ILK_GORUSME', 'DAVA_ACILDI', 'DURUSMA', 'TAHSIL', 'CLOSED', 'KAPANDI'].includes(t.caseStatus) ? `<button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px;width:100%" onclick="avMesajYukle('${t.caseId}')">💬 Müvekkilinizle Mesajlaş</button>` : ''}
+              ${t.status === 'SELECTED' && ['PRE_CASE_REVIEW', 'AUTHORIZED', 'ACTIVE', 'LAWYER_ASSIGNED', 'FILED_IN_COURT', 'IN_PROGRESS', 'ILK_GORUSME', 'DAVA_ACILDI', 'DURUSMA', 'TAHSIL'].includes(t.caseStatus) ? `<button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px;width:100%" onclick="avMesajYukle('${t.caseId}')">💬 Müvekkilinizle Mesajlaş</button>` : ''}
+              ${t.status === 'SELECTED' && ['CLOSED', 'KAPANDI', 'CANCELED'].includes(t.caseStatus) ? `<button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px;width:100%;color:#ff6b6b;border-color:rgba(255,107,107,0.3);background:rgba(255,107,107,0.05);cursor:not-allowed;" disabled>🔒 Dava Dosyası Kapandı</button>` : ''}
               ${t.status === 'PENDING' ? `<button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px;width:100%" disabled>⏳ Kullanıcı Kararını Bekliyor</button>` : ''}
               ${isWaitingUserDeposit ? `<button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px;width:100%" disabled>⏳ Müvekkil Güven Bedeli Bekleniyor</button>` : ''}
               ${t.status === 'REJECTED' || t.status === 'REJECTED_BY_LAWYER' ? `<button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px;width:100%;opacity:0.5;" disabled>❌ Teklif Reddedildi</button>` : ''}

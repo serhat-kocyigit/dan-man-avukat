@@ -338,9 +338,12 @@ function buildDavaActions(d) {
     const safeAciklama = (d.tahsilAciklama || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
     actions += `<button class="btn-primary" style="background:#e91e63;color:#fff;font-size:0.85rem;padding:10px 16px;margin-bottom:8px;width:100%" onclick="window.confirmCollectionModal('${d.id}', '${safeAciklama}')">✔️ Tahsilatı Onayla ve Dosyayı Kapat</button>
                 <button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px;width:100%" onclick="loadMesaj('${d.id}', '${d.status}')">💬 Mesajlaş</button>`;
-  } else if (['PRE_CASE_REVIEW', 'AUTHORIZED', 'ACTIVE', 'LAWYER_ASSIGNED', 'FILED_IN_COURT', 'IN_PROGRESS', 'ILK_GORUSME', 'DAVA_ACILDI', 'DURUSMA', 'CLOSED', 'KAPANDI'].includes(d.status))
+  } else if (['PRE_CASE_REVIEW', 'AUTHORIZED', 'ACTIVE', 'LAWYER_ASSIGNED', 'FILED_IN_COURT', 'IN_PROGRESS', 'ILK_GORUSME', 'DAVA_ACILDI', 'DURUSMA'].includes(d.status)) {
     actions += `<button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px"
               onclick="loadMesaj('${d.id}', '${d.status}')">💬 Mesajlaş</button>`;
+  } else if (['CLOSED', 'KAPANDI', 'CANCELED'].includes(d.status)) {
+    actions += `<button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px;width:100%;color:#ff6b6b;border-color:rgba(255,107,107,0.3);background:rgba(255,107,107,0.05);cursor:not-allowed;" disabled>🔒 Dava Dosyası Kapandı</button>`;
+  }
 
   // Sadece henüz bedeli ödenmemiş aşamalarda "Sil" butonuna izin veriyoruz
   if (d.status === 'OPEN') {
