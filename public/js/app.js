@@ -1,4 +1,4 @@
-﻿// =============================================
+// =============================================
 // HakPortal - Ana JavaScript (app.js)
 // =============================================
 
@@ -163,10 +163,18 @@ if (navbar) {
 function toggleMenu() {
     const links = document.getElementById('navLinks');
     const hamburger = document.getElementById('hamburger');
+    // Sidebar'ı seçiyoruz (CSS'te .panel-sidebar olarak tanımlıydı)
+    const sidebar = document.querySelector('.panel-sidebar'); 
 
-    if (links) {
+    if (hamburger) hamburger.classList.toggle('open');
+    
+    if (sidebar) {
+        // Avukat Paneli içerisindeysek sadece sidebar menüsünü aç, eski nav-links'i açma
+        sidebar.classList.toggle('open');
+        document.body.classList.toggle('nav-open');
+    } else if (links) {
+        // Normal sitedeysek eski nav-links menüsünü aç
         links.classList.toggle('open');
-        if (hamburger) hamburger.classList.toggle('open');
         document.body.classList.toggle('nav-open');
     }
 }
@@ -174,11 +182,26 @@ function toggleMenu() {
 document.addEventListener('click', (e) => {
     const links = document.getElementById('navLinks');
     const hamburger = document.getElementById('hamburger');
+    const sidebar = document.querySelector('.panel-sidebar');
 
-    if (links && links.classList.contains('open')) {
-        if (!links.contains(e.target) && !hamburger.contains(e.target)) {
-            links.classList.remove('open');
+    // Eğer tıklanan yer mesaj inputu ise hiçbir şey yapma (Klavye açılmasını engellemesin)
+    if (e.target.id === 'avMsgInput' || e.target.id === 'muvekkilMsgInput') return;
+
+    const isOpen = (links && links.classList.contains('open')) || (sidebar && sidebar.classList.contains('open'));
+
+    if (isOpen) {
+        // Eğer dışarı tıklandıysa menüyü kapat
+        const clickedOutside = (!links || !links.contains(e.target)) && 
+                               (!hamburger || !hamburger.contains(e.target)) && 
+                               (!sidebar || !sidebar.contains(e.target));
+                               
+        // Eğer menüdeki bir linke tıklandıysa menüyü kapat (Mobilde)
+        const clickedSidebarLink = e.target.closest('.sidebar-link') || e.target.closest('.nav-links button');
+
+        if (clickedOutside || (clickedSidebarLink && window.innerWidth <= 1024)) {
+            if (links) links.classList.remove('open');
             if (hamburger) hamburger.classList.remove('open');
+            if (sidebar) sidebar.classList.remove('open');
             document.body.classList.remove('nav-open');
         }
     }

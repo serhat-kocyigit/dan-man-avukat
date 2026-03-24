@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 
 <head>
@@ -14,46 +14,46 @@
 <body>
 
     <nav class="navbar scrolled" id="navbar">
-        <div class="nav-container">
+        <div class="nav-container nav-mobile-layout">
+            <button class="hamburger" id="hamburger"
+                onclick="toggleMenu()"><span></span><span></span><span></span></button>
+
             <a href="/" class="nav-logo">
-                <span class="logo-icon">&#x2696;&#xFE0F;</span>
+                <span class="logo-icon desktop-logo-icon">⚖️</span>
                 <span class="logo-text">Hak<span class="logo-accent">Portal</span></span>
+                <span class="status-badge status-ACTIVE mobile-avukat-badge" style="background:var(--primary); color:#fff;">Kullanıcı</span>
             </a>
+
             <div class="nav-links" id="navLinks">
                 <span id="navUserName" style="color:var(--text-secondary);font-size:0.9rem;margin-right:8px;"></span>
+                <span class="status-badge status-ACTIVE desktop-avukat-badge" style="margin-right:12px; background:var(--primary); color:#fff;">Kullanıcı Paneli</span>
                 <button class="nav-btn-outline" onclick="window.location.href='/'">Ana Sayfa</button>
                 <button class="nav-btn-outline nav-btn-danger" onclick="logout()">Çıkış</button>
             </div>
-            <div style="display:flex; align-items:center; gap:12px;">
-                <!-- BİLDİRİM ZİLİ -->
-                <div id="notifWrapper" style="position:relative;display:inline-flex;align-items:center;">
-                    <button id="notifBtn" onclick="toggleNotifDropdown()"
-                        style="position:relative;background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--text-secondary);transition:all 0.2s;"
-                        title="Bildirimler"
-                        onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
-                        onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.color='var(--text-secondary)'">
-                        🔔
-                        <span id="notifBadge"
-                            style="display:none;position:absolute;top:-4px;right:-4px;background:#e63946;color:#fff;font-size:0.6rem;font-weight:800;padding:1px 4px;border-radius:99px;min-width:16px;text-align:center;box-shadow:0 0 6px rgba(230,57,70,0.7);">0</span>
-                    </button>
-                    <!-- BİLDİRİM DROPDOWN -->
-                    <div id="notifDropdown"
-                        style="display:none;position:absolute;top:44px;right:0;width:340px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:9999;overflow:hidden;">
-                        <div
-                            style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);">
-                            <strong style="font-size:0.9rem;">🔔 Bildirimler</strong>
-                            <button onclick="tumunuOku()"
-                                style="font-size:0.75rem;color:var(--accent);background:none;border:none;cursor:pointer;">Tümünü
-                                Okundu İşaretle</button>
-                        </div>
-                        <div id="notifListesi" style="max-height:320px;overflow-y:auto;">
-                            <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:0.85rem;">
-                                Bildirim yükleniyor...</div>
-                        </div>
+
+            <div id="notifWrapper" style="position:relative;display:inline-flex;align-items:center;">
+                <button id="notifBtn" onclick="toggleNotifDropdown()" class="mobile-notif-bell"
+                    style="position:relative;background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:8px;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--text-secondary);transition:all 0.2s;"
+                    title="Bildirimler">
+                    🔔
+                    <span id="notifBadge"
+                        style="display:none;position:absolute;top:-4px;right:-4px;background:#e63946;color:#fff;font-size:0.6rem;font-weight:800;padding:1px 4px;border-radius:99px;min-width:16px;text-align:center;box-shadow:0 0 6px rgba(230,57,70,0.7);">0</span>
+                </button>
+                <!-- BİLDİRİM DROPDOWN -->
+                <div id="notifDropdown"
+                    style="display:none;position:absolute;top:44px;right:0;width:340px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:9999;overflow:hidden;">
+                    <div
+                        style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);">
+                        <strong style="font-size:0.9rem; color:var(--text-primary);">🔔 Bildirimler</strong>
+                        <button onclick="tumunuOku()"
+                            style="font-size:0.75rem;color:var(--accent);background:none;border:none;cursor:pointer;">Tümünü
+                            Okundu İşaretle</button>
+                    </div>
+                    <div id="notifListesi" style="max-height:320px;overflow-y:auto;">
+                        <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:0.85rem;">
+                            Bildirim yükleniyor...</div>
                     </div>
                 </div>
-                <button class="hamburger" id="hamburger"
-                    onclick="toggleMenu()"><span></span><span></span><span></span></button>
             </div>
         </div>
     </nav>
@@ -61,6 +61,14 @@
     <div class="panel-layout">
         <!-- SIDEBAR -->
         <aside class="panel-sidebar">
+            <div class="sidebar-mobile-profile">
+                <div class="smp-icon">👤</div>
+                <div class="smp-info">
+                    <div class="smp-name" id="sideUserName">Demo Kullanıcı</div>
+                    <div class="smp-role">Kullanıcı Paneli</div>
+                </div>
+            </div>
+
             <div class="panel-sidebar-title">Menü</div>
             <button class="sidebar-link active" onclick="showSection('davalarim')" id="sidebarDavalarim">
                 📋 Davalarım
@@ -82,6 +90,10 @@
             <button class="sidebar-link" onclick="logout()">
                 🚪 Çıkış Yap
             </button>
+
+            <div class="sidebar-mobile-footer">
+                © 2024 HakPortal
+            </div>
         </aside>
 
         <!-- ANA İÇERİK -->

@@ -1,4 +1,4 @@
-﻿/* =========================================
+/* =========================================
    HakPortal - Ana CSS Dosyası
    ========================================= */
 
@@ -1740,6 +1740,23 @@ tr:hover td {
   color: var(--text-muted);
 }
 
+/* Mobile Toggle Elements */
+.mobile-avukat-badge, .mobile-notif-bell, .sidebar-mobile-profile, .sidebar-mobile-footer {
+  display: none;
+}
+.desktop-avukat-badge {
+  display: inline-flex;
+}
+.mobile-notif-bell {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 5px;
+  align-items: center;
+  justify-content: center;
+}
+
 /* =========================================
    RESPONSIVE
    ========================================= */
@@ -1777,50 +1794,82 @@ tr:hover td {
 
   .panel-sidebar {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 70px;
+    top: 0;
+    left: -100%; /* Başlangıçta gizli */
+    width: 80%; /* Görseldeki gibi ekranın büyük kısmını kaplar */
+    max-width: 320px;
+    height: 100vh;
+    background: #12121A; /* Görseldeki koyu arka plan */
+    z-index: 2000;
+    transition: var(--transition);
     display: flex !important;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-around;
-    background: var(--bg-card);
-    border-top: 1px solid var(--border);
-    border-right: none;
-    z-index: 1000;
-    padding: 0 10px;
-    top: auto;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-
-  .panel-sidebar-title {
-    display: none;
-  }
-
-  .sidebar-link {
     flex-direction: column;
-    justify-content: center;
+    padding: 24px;
+    border-right: 1px solid var(--border);
+    box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+  }
+  .panel-sidebar-title {
+    display: block;
+    font-size: 0.75rem;
+    color: #666688; /* --text-muted */
+    margin-top: 24px;
+    margin-bottom: 12px;
+  }
+  .panel-sidebar.open {
+    left: 0;
+  }
+  .sidebar-mobile-profile {
+    display: flex;
     align-items: center;
-    width: auto;
-    min-width: 65px;
-    padding: 8px 4px;
-    gap: 4px;
-    font-size: 0.65rem;
-    border-radius: 8px;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* --border */
+  }
+  .sidebar-mobile-profile .smp-icon {
+    font-size: 2rem;
+    background: rgba(0, 217, 163, 0.15); /* var(--accent) background */
+    padding: 10px;
+    border-radius: 12px;
+  }
+  .sidebar-mobile-profile .smp-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+  }
+  .sidebar-mobile-profile .smp-role {
+    font-size: 0.8rem;
+    color: #9999BB;
+  }
+  .sidebar-mobile-footer {
+    display: block;
+    margin-top: auto;
+    font-size: 0.75rem;
+    color: #666688;
     text-align: center;
+    padding-top: 20px;
+  }
+  .sidebar-link {
+    flex-direction: row !important; /* İkon ve yazı yan yana */
+    justify-content: flex-start !important;
+    padding: 12px 16px !important;
+    font-size: 1rem !important;
+    gap: 15px !important;
+    border-radius: var(--radius-md) !important;
   }
 
+  .sidebar-link.active {
+    background: rgba(0, 217, 163, 0.1) !important;
+    color: var(--accent) !important;
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0 !important;
+  }
   .sidebar-link .sb-icon {
     font-size: 1.25rem;
     margin-bottom: 2px;
   }
 
-  .sidebar-link.active {
-    background: rgba(108, 99, 255, 0.12);
-    border-top: none;
-  }
+  
 
   .sidebar-link:hover {
     background: rgba(255, 255, 255, 0.05);
@@ -1860,7 +1909,33 @@ tr:hover td {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  .nav-container.nav-mobile-layout {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+  }
+  .nav-logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+  }
+  .mobile-avukat-badge {
+    display: inline-flex;
+    margin-left: 8px;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+  .desktop-avukat-badge {
+    display: none;
+  }
+  .mobile-notif-bell {
+    display: flex;
+  }
+
   .nav-links {
     display: none;
     position: fixed;
@@ -1990,4 +2065,16 @@ tr:hover td {
 
 .tooltip:hover::after {
   opacity: 1;
+}
+@media (max-width: 1024px) {
+  .nav-logo { font-size: 1.2rem; }
+  
+  .status-badge-top {
+    background: rgba(0, 217, 163, 0.15);
+    color: #00D9A3;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
 }

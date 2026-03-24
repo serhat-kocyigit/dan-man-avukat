@@ -183,6 +183,19 @@ router.put('/:id/sec', authMiddleware, roleMiddleware('kullanici'), async (req, 
             [offer.case_id, req.user.id]
         );
 
+        // AVUKATA BİLDİRİM GÖNDER: Teklifiniz seçildi!
+        try {
+            await conn.execute(
+                `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
+                 VALUES (?, ?, 'NEW_OFFER', '🎯 Teklifiniz Seçildi!', ?, ?, 0)`,
+                [uuidv4(), offer.avukat_id,
+                    'Bir müvekkil sizin teklifinizi seçti! Hemen ispat belgelerini inceleyin ve davayı kabul edip etmeyeceğinizi bildirin.',
+                offer.case_id]
+            );
+        } catch (notifErr) {
+            console.warn('Avukat bildirimi eklenemedi:', notifErr.message);
+        }
+
         await conn.commit();
         res.json({ message: 'Teklif seçildi! Avukat belgelerinizi inceleyip onay verecek.', engagementId });
     } catch (err) {
@@ -314,6 +327,19 @@ router.post('/:id/kullanici-odeme', authMiddleware, roleMiddleware('kullanici'),
        VALUES (?, 'WAITING_LAWYER_PAYMENT', 'Kullanıcı 99 TL güven bedelini ödedi. Avukat platform bedeli bekleniyor.', ?, 'kullanici')`,
             [engagement.case_id, req.user.id]
         );
+
+        // AVUKATA BİLDİRİM GÖNDER: Güven bedeli ödendi, sıra sizde!
+        try {
+            await conn.execute(
+                `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
+                 VALUES (?, ?, 'GENEL', '💳 Müvekkil Ödemeyi Yaptı!', ?, ?, 0)`,
+                [uuidv4(), engagement.avukat_id,
+                    'Müvekkil 99 TL güven bedelini ödedi. Şimdi sıra sizde! Platform hizmet bedelini ödeyerek süreci başlatabilir ve müvekkil ile mesajlaşmaya başlayabilirsiniz.',
+                engagement.case_id]
+            );
+        } catch (notifErr) {
+            console.warn('Avukat bildirimi eklenemedi:', notifErr.message);
+        }
 
         await conn.commit();
         res.json({ message: 'Güven bedeli alındı! Avukatınız platform bedelini ödeyince süreç başlıyor.' });

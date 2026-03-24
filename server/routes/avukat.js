@@ -166,7 +166,7 @@ router.get('/tekliflerim', authMiddleware, roleMiddleware('avukat'), async (req,
             [req.user.id]
         );
 
-        res.json(rows.map(r => {
+        const mappedRows = rows.map(r => {
             // İletişim bilgileri: Her iki ödeme de tamamlanınca açılır (PRE_CASE_REVIEW ve ötesi)
             // Avukat platform bedelini ödeyince PRE_CASE_REVIEW olur → iki taraf da ödemiş = aç ılır
             const isIletisimAcik = ['PRE_CASE_REVIEW', 'PENDING_USER_AUTH', 'AUTHORIZED', 'FILED_IN_COURT',
@@ -214,7 +214,29 @@ router.get('/tekliflerim', authMiddleware, roleMiddleware('avukat'), async (req,
                 riskNotlari: r.risk_notlari ? (typeof r.risk_notlari === 'string' ? JSON.parse(r.risk_notlari) : r.risk_notlari) : [],
                 ispatBelgeleri: isBelgeAcik ? (r.ispat_belgeleri ? (typeof r.ispat_belgeleri === 'string' ? JSON.parse(r.ispat_belgeleri) : r.ispat_belgeleri) : []) : [],
             };
-        }));
+        });
+
+        const getPriority = (t) => {
+            const isMatching = t.status === 'SELECTED' && t.caseStatus === 'MATCHING' && t.engagementStatus !== 'WAITING_USER_DEPOSIT';
+            const isWaitingLawyerPayment = t.status === 'SELECTED' && (t.caseStatus === 'WAITING_LAWYER_PAYMENT' || t.caseStatus === 'WAITING_PAYMENT');
+            
+            if (isMatching || isWaitingLawyerPayment) return 1;
+
+            const isClosed = ['CLOSED', 'KAPANDI', 'CANCELED'].includes(t.caseStatus);
+            const isRejected = ['REJECTED', 'REJECTED_BY_LAWYER'].includes(t.status);
+            if (isClosed || isRejected) return 3;
+
+            return 2;
+        };
+
+        const sortedRows = mappedRows.sort((a, b) => {
+            const pA = getPriority(a);
+            const pB = getPriority(b);
+            if (pA !== pB) return pA - pB; // Priority sırası 1 -> 2 -> 3
+            return new Date(b.createdAt) - new Date(a.createdAt); // Aynı öncelikte en yeni en üstte
+        });
+
+        res.json(sortedRows);
     } catch (err) {
         console.error('avukat tekliflerim error:', err);
         res.status(500).json({ error: 'Teklifler alınırken hata.' });

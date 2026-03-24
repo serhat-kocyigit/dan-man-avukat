@@ -29,6 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const user = Auth.getUser();
   const navName = document.getElementById('navUserName');
   if (navName) navName.textContent = `${user?.ad || ''} ${user?.soyad || ''}`;
+  const sideName = document.getElementById('sideUserName');
+  if (sideName) sideName.textContent = `${user?.ad || ''} ${user?.soyad || ''}`;
 
   // Kart numarası otomatik biçimlendir
   const kartNoEl = document.getElementById('kartNo');
@@ -256,6 +258,7 @@ async function loadDavalar() {
         PRE_CASE_REVIEW: '🧐 Ön İnceleme',
         PENDING_USER_AUTH: '⏳ Vekalet İsteği',
         AUTHORIZED: '✅ Vekalet Onaylı',
+        DAVA_NO_BEKLIYOR: '🏛️ Dava No Doğrula',
         FILED_IN_COURT: '🏛️ Dava Açıldı',
         LAWYER_ASSIGNED: '✅ Avukat Atandı',
         IN_PROGRESS: '💬 İşlemde',
@@ -305,49 +308,63 @@ async function loadDavalar() {
 function buildDavaActions(d) {
   let actions = '';
 
-  if (d.status === 'OPEN' && d.teklifSayisi > 0)
-    actions += `<button class="btn-primary" style="font-size:0.85rem;padding:10px 16px"
+  if (d.status === 'OPEN' && d.teklifSayisi > 0) {
+    actions += `<button class="btn-primary" style="width:100%"
               onclick="loadTeklifler('${d.id}')">Teklifleri Gör (${d.bekleyenTeklif || d.teklifSayisi})</button>`;
-  else if (d.status === 'OPEN')
-    actions += `<span style="font-size:0.83rem;color:var(--text-muted)">⏳ Avukat teklifi bekleniyor...</span>`;
+  }
+  else if (d.status === 'OPEN') {
+    actions += `<div style="font-size:0.83rem;color:var(--text-muted);text-align:center;padding:8px">⏳ Avukat teklifi bekleniyor...</div>`;
+  }
   else if (d.status === 'MATCHING') {
-    // DOĞRU AKIŞ: Avukat önce kabul etmeli → biz engagement durumuna bakıyoruz
-    // engagementStatus: 'WAITING_LAWYER_REVIEW' = avukat inceliyor
-    // engagementStatus: 'WAITING_USER_DEPOSIT' = avukat kabul etti, kullanıcı ödeme yapacak
     if (d.engagementStatus === 'WAITING_USER_DEPOSIT') {
       actions += `
-        <div style="background:rgba(0,217,163,0.08);border:1px solid rgba(0,217,163,0.3);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:0.82rem;color:#00d9a3;">
-          ✅ Avukatınız belgeleri inceleyip dosyayı kabul etti! 99 TL güven bedelini ödeyerek süreci başlatın.
+        <div style="background:rgba(0,217,163,0.08);border:1px solid rgba(0,217,163,0.3);border-radius:10px;padding:12px;margin-bottom:4px;font-size:0.85rem;color:#00d9a3;line-height:1.4">
+          ✅ <strong>Avukatınız dosyayı kabul etti!</strong><br/>
+          Süreci başlatmak için 99 TL güven bedelini ödemeniz bekleniyor.
         </div>
-        <button class="btn-primary" style="background:linear-gradient(135deg,#00d9a3,#00b386);color:#000;font-size:0.85rem;padding:10px 16px;width:100%;font-weight:700;"
-                onclick="goOdeme('${d.id}')">✅ 99 TL Güven Bedeli Öde</button>`;
+        <button class="btn-primary" style="background:linear-gradient(135deg,#00d9a3,#00b386);color:#000;width:100%;font-weight:700;"
+                onclick="goOdeme('${d.id}')">💳 99 TL Güven Bedeli Öde</button>`;
     } else {
-      // Avukat henüz inceliyor (WAITING_LAWYER_REVIEW)
       actions += `
-        <div style="background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.3);border-radius:8px;padding:10px 12px;font-size:0.82rem;color:#ffc107;">
-          🧐 Seçtiğiniz avukat belgelerinizi inceliyor... Kabul ederse bildirim alacaksınız.
+        <div style="background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.3);border-radius:10px;padding:12px;font-size:0.85rem;color:#ffc107;line-height:1.4">
+          🧐 <strong>Avukatınız inceliyor...</strong><br/>
+          Seçtiğiniz avukat belgelerinizi inceliyor. Kabul ettiğinde ödeme adımı açılacaktır.
         </div>`;
     }
   }
-  else if (d.status === 'WAITING_PAYMENT' || d.status === 'WAITING_LAWYER_PAYMENT')
-    actions += `<span style="font-size:0.83rem;color:var(--text-muted)">⏳ Avukat platform bedelini ödüyor...</span>`;
-  else if (d.status === 'PENDING_USER_AUTH')
-    actions += `<button class="btn-primary" style="background:#00d9a3;color:#000;font-size:0.85rem;padding:10px 16px;margin-bottom:8px;width:100%" onclick="window.approveUserAuth('${d.id}')">⚠️ Avukata Vekalet Ver (Onayla)</button>
-                <button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px;width:100%" onclick="loadMesaj('${d.id}', '${d.status}')">💬 Mesajlaş</button>`;
+  else if (d.status === 'WAITING_PAYMENT' || d.status === 'WAITING_LAWYER_PAYMENT') {
+    actions += `<div style="font-size:0.83rem;color:var(--text-muted);text-align:center;padding:8px">⏳ Avukat platform bedelini ödüyor...</div>`;
+  }
+  else if (d.status === 'PENDING_USER_AUTH') {
+    actions += `<button class="btn-primary" style="background:#00d9a3;color:#000;width:100%;font-weight:700;" onclick="window.approveUserAuth('${d.id}')">⚠️ Avukata Vekalet Ver (Onayla)</button>
+                <button class="btn-ghost" style="width:100%" onclick="loadMesaj('${d.id}', '${d.status}')">💬 Mesajlaş</button>`;
+  }
   else if (d.status === 'TAHSIL') {
     const safeAciklama = (d.tahsilAciklama || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-    actions += `<button class="btn-primary" style="background:#e91e63;color:#fff;font-size:0.85rem;padding:10px 16px;margin-bottom:8px;width:100%" onclick="window.confirmCollectionModal('${d.id}', '${safeAciklama}')">✔️ Tahsilatı Onayla ve Dosyayı Kapat</button>
-                <button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px;width:100%" onclick="loadMesaj('${d.id}', '${d.status}')">💬 Mesajlaş</button>`;
-  } else if (['PRE_CASE_REVIEW', 'AUTHORIZED', 'ACTIVE', 'LAWYER_ASSIGNED', 'FILED_IN_COURT', 'IN_PROGRESS', 'ILK_GORUSME', 'DAVA_ACILDI', 'DURUSMA'].includes(d.status)) {
-    actions += `<button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px"
+    actions += `<button class="btn-primary" style="background:#e91e63;color:#fff;width:100%;font-weight:700;" onclick="window.confirmCollectionModal('${d.id}', '${safeAciklama}')">✔️ Tahsilatı Onayla ve Kapat</button>
+                <button class="btn-ghost" style="width:100%" onclick="loadMesaj('${d.id}', '${d.status}')">💬 Mesajlaş</button>`;
+  } else if (d.status === 'DAVA_NO_BEKLIYOR') {
+    const safeDavaNo = (d.davaNo || '').replace(/'/g, "\\'");
+    actions += `
+      <div style="background:rgba(255,179,0,0.09);border:1px solid rgba(255,179,0,0.35);border-radius:10px;padding:14px;margin-bottom:4px;">
+        <div style="font-size:0.85rem;font-weight:700;color:#ffb300;margin-bottom:8px;">🏛️ Mahkeme Dosya Numarası Hazır</div>
+        <div style="font-size:1.2rem;font-weight:900;color:#fff;letter-spacing:1px;padding:10px;background:rgba(0,0,0,0.3);border-radius:6px;margin-bottom:10px;font-family:monospace;text-align:center;border:1px solid rgba(255,255,255,0.1)">${d.davaNo || '-'}</div>
+        <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">Lütfen bu numaranın doğruluğunu e devletten teyit edin. Doğruysa <strong>Onayla</strong> butonuna basın.</div>
+      </div>
+      <button class="btn-primary" style="background:linear-gradient(135deg,#00d9a3,#00b386);color:#000;width:100%;font-weight:700;"
+              onclick="window.confirmDavaNo('${d.id}', '${safeDavaNo}')">✅ Dava Numarasını Onayla</button>
+      <button class="btn-ghost" style="width:100%;color:#ff6b6b;border-color:rgba(255,107,107,0.3);"
+              onclick="window.rejectDavaNo('${d.id}')">❌ Numara Yanlış</button>`;
+  }
+  else if (['PRE_CASE_REVIEW', 'AUTHORIZED', 'ACTIVE', 'LAWYER_ASSIGNED', 'FILED_IN_COURT', 'IN_PROGRESS', 'ILK_GORUSME', 'DAVA_ACILDI', 'DURUSMA'].includes(d.status)) {
+    actions += `<button class="btn-ghost" style="width:100%"
               onclick="loadMesaj('${d.id}', '${d.status}')">💬 Mesajlaş</button>`;
   } else if (['CLOSED', 'KAPANDI', 'CANCELED'].includes(d.status)) {
-    actions += `<button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px;width:100%;color:#ff6b6b;border-color:rgba(255,107,107,0.3);background:rgba(255,107,107,0.05);cursor:not-allowed;" disabled>🔒 Dava Dosyası Kapandı</button>`;
+    actions += `<button class="btn-ghost" style="width:100%;color:#ff6b6b;border-color:rgba(255,107,107,0.3);background:rgba(255,107,107,0.05);cursor:not-allowed;" disabled>🔒 Dava Dosyası Kapandı</button>`;
   }
 
-  // Sadece henüz bedeli ödenmemiş aşamalarda "Sil" butonuna izin veriyoruz
   if (d.status === 'OPEN') {
-    actions += ` <button class="btn-ghost" style="font-size:0.85rem;padding:10px 16px;color:#ff4d4f;margin-left:auto;"
+    actions += `<button class="btn-ghost" style="color:#ff4d4f;margin-top:4px;border:none;background:transparent"
                 onclick="window.davaSil('${d.id}')">🗑️ İlanı Sil</button>`;
   }
 
@@ -371,6 +388,46 @@ window.davaSil = async function (caseId) {
     _showToast()(err.message, 'error');
   }
 }
+
+// ---- DAVA NO ONAY / RED ----
+window.confirmDavaNo = async function (caseId, davaNo) {
+  const isConfirmed = await window.HakPortal.showConfirm(
+    `Mahkeme dosya numarasını onaylıyorsunuz:\n\n"${davaNo}"\n\nBu numaranın doğru olduğunu ve kendi bilgilerinizle örtüştüğünü teyit ediyor musunuz?`
+  );
+  if (!isConfirmed) return;
+  try {
+    await _apiCall()('PUT', `/cases/${caseId}/status`, {
+      status: 'FILED_IN_COURT',
+      aciklama: `Kullanıcı mahkeme dosya numarasını doğruladı: ${davaNo}`
+    });
+    _showToast()('🏛️ Dava numarası onaylandı! Süreç devam ediyor.', 'success');
+    const davaCont = document.getElementById('davalarListesi');
+    if (davaCont) { delete davaCont.dataset.loaded; delete davaCont.dataset.lastHTML; }
+    loadDavalar();
+  } catch (err) {
+    _showToast()(err.message, 'error');
+  }
+};
+
+window.rejectDavaNo = async function (caseId) {
+  const isConfirmed = await window.HakPortal.showConfirm(
+    'Girilen dava numarasının yanlış olduğunu bildirmek istiyorsunuz.\n\nAvukatınıza mesaj gönderip durumu bildireceksiniz. Onay veriyor musunuz?'
+  );
+  if (!isConfirmed) return;
+  try {
+    // Durumu AUTHORIZED'a geri al (avukat yeniden dava no girebilsin)
+    await _apiCall()('PUT', `/cases/${caseId}/status`, {
+      status: 'AUTHORIZED',
+      aciklama: 'Kullanıcı girilen mahkeme dosya numarasının yanlış olduğunu bildirdi. Avukat yeniden giriş yapmalı.'
+    });
+    _showToast()('❌ Numara yanlış olarak bildirildi. Avukatınızla mesajlaşarak bilgi verin.', 'info');
+    const davaCont = document.getElementById('davalarListesi');
+    if (davaCont) { delete davaCont.dataset.loaded; delete davaCont.dataset.lastHTML; }
+    loadDavalar();
+  } catch (err) {
+    _showToast()(err.message, 'error');
+  }
+};
 
 window.approveUserAuth = async function (caseId) {
   const isConfirmed = await window.HakPortal.showConfirm('Avukatınıza resmi vekaleti verdiğinizi ve davayı üstlenmesi için yetkilendirdiğinizi onaylıyor musunuz?\n\n* Onayladığınızda avukat yetkilenip mahkemede davanızı açacaktır.');

@@ -485,6 +485,7 @@
 
 .dava-card-actions {
     display: flex;
+    flex-direction: column;
     gap: 8px;
 }
 
@@ -621,7 +622,7 @@
     border-bottom: 1px solid var(--border);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .odeme-wrapper {
         grid-template-columns: 1fr;
     }
@@ -639,6 +640,13 @@
     .teklif-grid,
     .dava-grid {
         grid-template-columns: 1fr;
+    }
+
+    .teklif-card, .dava-card {
+        padding: 16px;
+        max-width: 100%;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
     }
 
     .detail-row,
@@ -1219,7 +1227,7 @@
     box-shadow: 0 0 0 2px var(--primary);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .avatar-designer-grid {
         grid-template-columns: 1fr;
         height: auto;
@@ -1500,7 +1508,7 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .avatar-designer-container {
         grid-template-columns: 1fr;
         height: auto;
@@ -1549,4 +1557,78 @@
 
 .profil-avatar-preview:hover .avatar-edit-overlay {
     opacity: 1;
+}
+@media (max-width: 600px) {
+  /* Ana kapsayıcılar */
+  .panel-main {
+    padding: 15px !important;
+    background: #0A0A0F;
+  }
+
+  /* YZ Analiz Kutusu (Mavi çerçeveli olan) */
+  .ai-analysis-box {
+    border: 2px solid #2E5BFF; /* Görseldeki canlı mavi */
+    background: rgba(46, 91, 255, 0.05);
+    border-radius: 16px;
+    padding: 15px;
+    margin: 15px 0;
+  }
+
+  /* Alt taraftaki 4'lü mini kartlar (Kıdem, İhbar vb.) */
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important; /* 2x2 dizilim */
+    gap: 10px !important;
+  }
+
+  .stat-card {
+    background: #161B22 !important;
+    border: 1px solid rgba(255,255,255,0.05) !important;
+    padding: 12px !important;
+    border-radius: 12px !important;
+  }
+
+  .stat-card-num {
+    font-size: 1.1rem !important;
+    color: #00D9A3; /* Görseldeki yeşil rakamlar */
+  }
+
+  /* Alttaki büyük "Teklif Gönderildi" butonu */
+  .btn-primary.btn-lg {
+    position: sticky;
+    bottom: 20px;
+    width: 100%;
+    border-radius: 50px; /* Tam yuvarlak buton */
+    padding: 18px;
+    background: linear-gradient(135deg, #00D9A3, #00B889);
+    font-size: 1.1rem;
+  }
+
+  /* MESAJLAŞMA MOBİL DÜZELTME */
+  .messages-container {
+    height: calc(100vh - 180px) !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .messages-input {
+    padding: 10px !important;
+    gap: 8px !important;
+    background: var(--bg-card) !important;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+  }
+
+  .messages-input input {
+    font-size: 16px !important; /* Mobile keyboard zoom engellemek için minimum 16px olmalı */
+    padding: 12px 15px !important;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Mesaj saati rengi düzenleme */
+  .message-bubble.received .message-time {
+    color: var(--text-muted) !important;
+    opacity: 0.7;
+  }
 }
