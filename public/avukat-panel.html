@@ -17,13 +17,13 @@
         <div class="nav-container nav-mobile-layout">
             <button class="hamburger" id="hamburger"
                 onclick="toggleMenu()"><span></span><span></span><span></span></button>
-            
+
             <a href="/" class="nav-logo">
                 <span class="logo-icon desktop-logo-icon">⚖️</span>
                 <span class="logo-text">Hak<span class="logo-accent">Portal</span></span>
                 <span class="status-badge status-ACTIVE mobile-avukat-badge">Avukat</span>
             </a>
-            
+
             <div class="nav-links" id="navLinks">
                 <span id="navAvukatName" style="color:var(--text-secondary);font-size:0.9rem;margin-right:8px;"></span>
                 <span class="status-badge status-ACTIVE desktop-avukat-badge" style="margin-right:12px">Avukat Paneli</span>
@@ -39,7 +39,6 @@
                     <span id="notifBadge"
                         style="display:none;position:absolute;top:-4px;right:-4px;background:#e63946;color:#fff;font-size:0.6rem;font-weight:800;padding:1px 4px;border-radius:99px;min-width:16px;text-align:center;box-shadow:0 0 6px rgba(230,57,70,0.7);">0</span>
                 </button>
-                <!-- BİLDİRİM DROPDOWN -->
                 <div id="notifDropdown"
                     style="display:none;position:absolute;top:44px;right:0;width:340px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.4);z-index:9999;overflow:hidden;">
                     <div
@@ -63,24 +62,30 @@
             <div class="sidebar-mobile-profile">
                 <div class="smp-icon">⚖️</div>
                 <div class="smp-info">
-                    <div class="smp-name">Demo Avukat</div>
+                    <div class="smp-name" id="avSidebarName">Avukat</div>
                     <div class="smp-role">Avukat Paneli</div>
                 </div>
             </div>
 
-            <div class="panel-sidebar-title">Menü</div>
-            <button class="sidebar-link active" onclick="avukatSection('acikDavalar')" id="sbAcik">⚖️ Açık
-                Davalar</button>
-            <button class="sidebar-link" onclick="avukatSection('tekliflerim')" id="sbTeklif">📋 Tekliflerim</button>
-            <button class="sidebar-link" onclick="avukatSection('aktivDavalar')" id="sbAktif">🟢 Aktif
-                Davalarım</button>
-            <button class="sidebar-link" onclick="avukatSection('kapananDavalar')" id="sbKapanan">🛑 Kapanan
-                Davalar</button>
+            <div class="panel-sidebar-title">Müvekkil</div>
+            <button class="sidebar-link active" onclick="avukatSection('gelenTalepler')" id="sbTalepler">
+                📞 Gelen Talepler
+                <span id="talepBadge" style="display:none;background:#e63946;color:#fff;font-size:0.65rem;font-weight:800;padding:1px 6px;border-radius:99px;min-width:18px;text-align:center;margin-left:auto;"></span>
+            </button>
+            <button class="sidebar-link" onclick="avukatSection('aktivDavalar')" id="sbAktif">
+                🟢 Aktif Müvekkiller
+            </button>
             <button class="sidebar-link" onclick="avukatSection('mesajlar')" id="sbMesaj"
                 style="display:flex;align-items:center;justify-content:space-between;">
                 <span>💬 Mesajlar</span>
                 <span id="avMesajBadge"
                     style="display:none;background:#e63946;color:#fff;font-size:0.65rem;font-weight:800;padding:1px 6px;border-radius:99px;min-width:18px;text-align:center;box-shadow:0 0 6px rgba(230,57,70,0.6);"></span>
+            </button>
+            <button class="sidebar-link" onclick="avukatSection('kapananDavalar')" id="sbKapanan">
+                🛑 Kapanan Dosyalar
+            </button>
+            <button class="sidebar-link" onclick="avukatSection('yzAsistan')" id="sbYzAsistan" style="background: rgba(99, 102, 241, 0.1); border-left: 3px solid #6366f1;">
+                🤖 YZ Asistan (RAG)
             </button>
 
             <div class="panel-sidebar-title">Hesap</div>
@@ -89,109 +94,50 @@
             <button class="sidebar-link" onclick="logout()" style="color: #FF4757;">🚪 Çıkış Yap</button>
 
             <div class="sidebar-mobile-footer">
-                &copy; 2024 HakPortal
+                &copy; 2025 HakPortal
             </div>
         </aside>
 
         <main class="panel-main">
-            <!-- AÇIK DAVALAR -->
-            <div id="avSectionAcikDavalar">
+
+            <!-- GELEN İLETİŞİM TALEPLERİ -->
+            <div id="avSectionGelenTalepler">
                 <div class="panel-header">
                     <div>
-                        <h1 class="panel-title">Açık Davalar</h1>
-                        <p class="panel-subtitle" id="acikDavatitle">Şehrinizdeki yeni davalar</p>
+                        <h1 class="panel-title">Gelen İletişim Talepleri</h1>
+                        <p class="panel-subtitle">Sizinle iletişime geçmek isteyen kullanıcılar. Kabul ederseniz iletişim bilgileri açılır.</p>
                     </div>
                 </div>
-                <div id="acikDavalarListesi"></div>
-            </div>
-
-            <!-- TEKLİF VER MODAL benzeri -->
-            <div id="avSectionTeklifVer" style="display:none">
-                <div class="panel-header">
-                    <button class="btn-ghost" onclick="avukatSection('acikDavalar')" style="margin-bottom:12px">←
-                        Davalara Dön</button>
-                    <h1 class="panel-title">Teklif Ver</h1>
+                <!-- Yasal Uyarı Kartı -->
+                <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.25);border-radius:12px;padding:16px 20px;margin-bottom:24px;display:flex;gap:14px;align-items:flex-start;">
+                    <span style="font-size:1.4rem;flex-shrink:0;">⚖️</span>
+                    <div>
+                        <div style="font-weight:700;color:var(--primary-light);margin-bottom:4px;font-size:0.9rem;">Avukatlık Kanunu Uyumu</div>
+                        <p style="font-size:0.83rem;color:var(--text-secondary);line-height:1.6;margin:0;">
+                            Platform, yalnızca bilgi sistemi ve rehberlik hizmeti sunar. İletişim talebini kabul etmeniz durumunda müvekkil sizin iletişim bilgilerinize erişir. Vekalet sözleşmesi ve ücret anlaşması doğrudan siz ve müvekkil arasında yapılır.
+                        </p>
+                    </div>
                 </div>
-                <div class="avukat-teklif-form">
-                    <h3>📋 Teklif Formu</h3>
-                    <div id="teklifDavaBilgi"
-                        style="margin-bottom:20px;padding:16px;background:var(--bg-surface);border-radius:12px;border:1px solid var(--border)">
+                <div id="gelenTaleplerListesi">
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <div class="empty-title">Henüz iletişim talebi yok.</div>
+                        <div class="empty-sub">Profilinizi güncel tutun. Kullanıcılar şehrinizdeki avukatları listelediğinde sizi görecekler.</div>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Ücret Modeli <span class="required">*</span></label>
-                        <select class="form-select" id="avUcretModeli" onchange="toggleUcretFields()">
-                            <option value="yuzde">Yüzde (%)</option>
-                            <option value="sabit">Sabit Ücret (₺)</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="oranField">
-                        <label class="form-label">Yüzde Oranı (%)</label>
-                        <input type="number" class="form-input" id="avOran" placeholder="Örn: 15" min="1" max="100" />
-                    </div>
-                    <div class="form-group" id="sabitField" style="display:none">
-                        <label class="form-label">Sabit Ücret (₺)</label>
-                        <div class="input-with-icon">
-                            <span class="input-icon">₺</span>
-                            <input type="number" class="form-input with-icon" id="avSabitUcret"
-                                placeholder="Örn: 5000" />
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Ön Ödeme</label>
-                        <select class="form-select" id="avOnOdeme">
-                            <option value="false">Hayır, ön ödeme gerektirmiyorum</option>
-                            <option value="true">Evet, ön ödeme alıyorum</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Tahmini Süre <span class="required">*</span></label>
-                        <input type="text" class="form-input" id="avTahminiSure" placeholder="Örn: 3-6 ay, 1 yıl" />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Açıklama (iletişim bilgisi yazmayın)</label>
-                        <textarea class="form-input" id="avAciklama" rows="3"
-                            placeholder="Deneyimleriniz, yaklaşımınız..." style="resize:vertical"></textarea>
-                    </div>
-                    <div class="modal-info-box">
-                        ⚠️ Açıklama alanına telefon numarası, e-posta veya sosyal medya bilgisi yazamazsınız. Bu
-                        teklifler platform kuralı gereği filtrelenmektedir.
-                    </div>
-                    <button class="btn-primary btn-block" onclick="submitTeklif()">Teklif Gönder</button>
                 </div>
             </div>
 
-            <!-- TEKLİFLERİM -->
-            <div id="avSectionTekliflerim" style="display:none">
-                <div class="panel-header">
-                    <h1 class="panel-title">Tekliflerim</h1>
-                </div>
-                <div id="avTekliflerListesi"></div>
-            </div>
-
-            <!-- AKTİF DAVALAR -->
+            <!-- AKTİF MÜVEKKİLLER -->
             <div id="avSectionAktivDavalar" style="display:none">
                 <div class="panel-header">
-                    <h1 class="panel-title">Aktif Davalarım</h1>
+                    <h1 class="panel-title">Aktif Müvekkiller</h1>
+                    <p class="panel-subtitle" style="margin:0">Talebi kabul ettiğiniz ve süreç devam eden müvekkil dosyaları.</p>
                 </div>
                 <div id="avAktivListesi">
                     <div class="empty-state">
                         <div class="empty-icon">⏳</div>
-                        <div class="empty-title">Henüz aktif dava yok.</div>
-                        <div class="empty-sub">Teklifiniz kabul edilip ödeme yapıldıktan sonra burada görünecek.</div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- KAPANAN DAVALAR -->
-            <div id="avSectionKapananDavalar" style="display:none">
-                <div class="panel-header">
-                    <h1 class="panel-title">Kapanan Davalar</h1>
-                </div>
-                <div id="avKapananListesi">
-                    <div class="empty-state">
-                        <div class="empty-icon">🛑</div>
-                        <div class="empty-title">Henüz kapanan davanız yok.</div>
-                        <div class="empty-sub">Sonuçlanan veya iptal edilen davalarınız burada listelenecektir.</div>
+                        <div class="empty-title">Henüz aktif müvekkil yok.</div>
+                        <div class="empty-sub">Gelen talepleri kabul ettiğinizde burada görünecekler.</div>
                     </div>
                 </div>
             </div>
@@ -201,7 +147,84 @@
                 <div class="panel-header">
                     <h1 class="panel-title">Mesajlar</h1>
                 </div>
-                <div id="avMesajContainer"></div>
+                <div id="avMesajContainer">
+                    <div class="empty-state">
+                        <div class="empty-icon">💬</div>
+                        <div class="empty-title">Henüz mesajınız yok.</div>
+                        <div class="empty-sub">İletişim talebi kabul ettikten sonra mesajlaşma başlar.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KAPANAN DOSYALAR -->
+            <div id="avSectionKapananDavalar" style="display:none">
+                <div class="panel-header">
+                    <h1 class="panel-title">Kapanan Dosyalar</h1>
+                </div>
+                <div id="avKapananListesi">
+                    <div class="empty-state">
+                        <div class="empty-icon">🛑</div>
+                        <div class="empty-title">Henüz kapanan dosya yok.</div>
+                        <div class="empty-sub">Tamamlanan veya iptal edilen dosyalar burada görünür.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- YZ ASİSTAN (RAG) -->
+            <div id="avSectionYzAsistan" style="display:none">
+                <div class="panel-header rag-panel-header">
+                    <div style="display: flex; align-items: center; gap: 12px; width: 100%;">
+                        <button class="rag-mobile-toggle" onclick="toggleRagSidebar()" title="Geçmiş">
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        </button>
+                        <div style="flex: 1;">
+                            <h1 class="panel-title">YZ Hukuk Asistanı</h1>
+                            <p class="panel-subtitle">Mevzuat ve Yargıtay kararlarında yapay zeka desteği.</p>
+                        </div>
+                        <button class="rag-new-chat-btn mobile-new-chat" onclick="createNewChat()" title="Yeni Sohbet">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="yzAsistanContainer">
+                    <div class="rag-layout" id="ragLayout">
+                        <!-- Sohbet Listesi (Sidebar) -->
+                        <div class="rag-sidebar" id="ragSidebar">
+                            <div class="rag-sidebar-header">
+                                <h3 style="margin:0; font-size:1rem; color:#fff;">Sohbet Geçmişi</h3>
+                                <button class="rag-sidebar-close" onclick="toggleRagSidebar()">✕</button>
+                            </div>
+                            <button class="rag-new-chat-btn desktop-new-chat" onclick="createNewChat()">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                Yeni Sohbet
+                            </button>
+                            <div class="rag-sessions-list" id="ragSessionsList">
+                                <!-- Oturumlar buraya gelecek -->
+                            </div>
+                        </div>
+
+                        <!-- Ana Sohbet Alanı -->
+                        <div class="rag-chat-wrapper">
+                            <div class="rag-messages" id="ragMessages">
+                                <div class="rag-empty-state" id="ragEmptyState">
+                                    <div class="rag-empty-icon">🤖</div>
+                                    <div class="rag-empty-title">Size Nasıl Yardımcı Olabilirim?</div>
+                                    <div class="rag-empty-sub">
+                                        Mevzuat ve Yargıtay kararları hakkında sorularınızı sorabilirsiniz.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rag-input-area">
+                                <textarea id="ragInput" placeholder="Hukuki sorunuzu buraya yazın..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+                                <button id="ragSendBtn" onclick="sendRagMessage()" title="Gönder">
+                                    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                                    <span>Gönder</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="rag-sidebar-overlay" onclick="toggleRagSidebar()"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- PROFİL -->
@@ -210,23 +233,16 @@
                     <h1 class="panel-title">Profilim</h1>
                 </div>
 
-                <!-- Profil Sekmeleri -->
-                <div
-                    style="display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0">
-                    <button id="avTabBilgi" class="profil-tab active" onclick="switchAvProfilTab('bilgi')">📋
-                        Bilgilerim</button>
-                    <button id="avTabDuzenle" class="profil-tab" onclick="switchAvProfilTab('duzenle')">✏️
-                        Düzenle</button>
-                    <button id="avTabSifre" class="profil-tab" onclick="switchAvProfilTab('sifre')">🔒 Şifre
-                        Değiştir</button>
+                <div style="display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0">
+                    <button id="avTabBilgi" class="profil-tab active" onclick="switchAvProfilTab('bilgi')">📋 Bilgilerim</button>
+                    <button id="avTabDuzenle" class="profil-tab" onclick="switchAvProfilTab('duzenle')">✏️ Düzenle</button>
+                    <button id="avTabSifre" class="profil-tab" onclick="switchAvProfilTab('sifre')">🔒 Şifre Değiştir</button>
                 </div>
 
-                <!-- Bilgi Görüntüleme -->
                 <div id="avProfilTabBilgi">
                     <div id="avProfilBilgi"></div>
                 </div>
 
-                <!-- Profil Düzenleme -->
                 <div id="avProfilTabDuzenle" style="display:none">
                     <div class="profil-card">
                         <div class="profil-avatar-edit-container">
@@ -240,68 +256,86 @@
                             </div>
                             <input type="file" id="avAvatarFile" style="display:none" accept="image/*"
                                 onchange="previewAvProfilePhoto(this)" />
-                            <p style="font-size:0.7rem; color:var(--text-muted); margin-top:5px;">Fotoğrafı değiştirmek
-                                için tıklayın</p>
+                            <p style="font-size:0.7rem; color:var(--text-muted); margin-top:5px;">Fotoğrafı değiştirmek için tıklayın</p>
                         </div>
-                        <h3 style="font-size:1rem;font-weight:700;margin-bottom:20px;text-align:center">Profil
-                            Bilgilerini Düzenle</h3>
+                        <h3 style="font-size:1rem;font-weight:700;margin-bottom:20px;text-align:center">Profil Bilgilerini Düzenle</h3>
                         <form id="avProfilDuzenleForm" onsubmit="avProfilKaydet(event)">
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Ad <span class="required">*</span></label>
-                                    <input type="text" class="form-input" id="avAd" />
+                                    <input type="text" class="form-input" id="avAdEdit" />
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Soyad <span class="required">*</span></label>
-                                    <input type="text" class="form-input" id="avSoyad" />
+                                    <input type="text" class="form-input" id="avSoyadEdit" />
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
+                                    <label class="form-label">Unvan</label>
+                                    <input type="text" class="form-input" id="avUnvanEdit" placeholder="Av., Avukat, Hukuk Müşaviri..." />
+                                </div>
+                                <div class="form-group">
                                     <label class="form-label">Şehir <span class="required">*</span></label>
-                                    <select class="form-select" id="avSehir">
-                                        <option>Adana</option>
-                                        <option>Ankara</option>
-                                        <option>Antalya</option>
-                                        <option>Bursa</option>
-                                        <option>Diyarbakır</option>
-                                        <option>Erzurum</option>
-                                        <option>Eskişehir</option>
-                                        <option>Gaziantep</option>
-                                        <option>İstanbul</option>
-                                        <option>İzmir</option>
-                                        <option>Kayseri</option>
-                                        <option>Kocaeli</option>
-                                        <option>Konya</option>
-                                        <option>Malatya</option>
-                                        <option>Mersin</option>
-                                        <option>Samsun</option>
-                                        <option>Şanlıurfa</option>
-                                        <option>Trabzon</option>
+                                    <select class="form-select" id="avSehirEdit">
+                                        <option>Adana</option><option>Ankara</option><option>Antalya</option>
+                                        <option>Bursa</option><option>Diyarbakır</option><option>Erzurum</option>
+                                        <option>Eskişehir</option><option>Gaziantep</option><option>İstanbul</option>
+                                        <option>İzmir</option><option>Kayseri</option><option>Kocaeli</option>
+                                        <option>Konya</option><option>Malatya</option><option>Mersin</option>
+                                        <option>Samsun</option><option>Şanlıurfa</option><option>Trabzon</option>
                                         <option>Diğer</option>
                                     </select>
                                 </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Baro <span class="required">*</span></label>
+                                    <input type="text" class="form-input" id="avBaroEdit" placeholder="İstanbul Barosu" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Baro No <span class="required">*</span></label>
+                                    <input type="text" class="form-input" id="avBaroNoEdit" placeholder="IST-00001" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Sicil No</label>
+                                    <input type="text" class="form-input" id="avSicilNoEdit" placeholder="SIC-001" />
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Mezuniyet Yılı</label>
+                                    <input type="number" class="form-input" id="avMezuniyetEdit" placeholder="2012" min="1950" max="2030" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Deneyim (Yıl)</label>
+                                    <input type="number" class="form-input" id="avDeneyimEdit" placeholder="12" min="0" max="70" />
+                                </div>
                                 <div class="form-group">
                                     <label class="form-label">Telefon</label>
-                                    <input type="tel" class="form-input" id="avTelefon" />
+                                    <input type="tel" class="form-input" id="avTelefonEdit" />
                                 </div>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Hakkımda (Bio)</label>
-                                <textarea class="form-input" id="avBio" rows="4"
-                                    placeholder="Kendinizden bahsedin..."></textarea>
+                                <label class="form-label">Uzmanlık Alanları (virgülle ayırın)</label>
+                                <input type="text" class="form-input" id="avUzmanlikEdit" placeholder="İş Hukuku, Kıdem Tazminatı, İhbar Tazminatı..." />
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Hakkımda / Bio</label>
+                                <textarea class="form-input" id="avBioEdit" rows="4"
+                                    placeholder="Kendinizden ve uzmanlık alanlarınızdan bahsedin. (İletişim bilgisi yazmayın)"></textarea>
                             </div>
                             <div id="avProfilError" class="modal-error" style="display:none"></div>
                             <div style="display:flex;gap:12px">
                                 <button type="submit" class="btn-primary" id="avProfilSaveBtn">Kaydet</button>
-                                <button type="button" class="btn-ghost"
-                                    onclick="switchAvProfilTab('bilgi')">İptal</button>
+                                <button type="button" class="btn-ghost" onclick="switchAvProfilTab('bilgi')">İptal</button>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <!-- Şifre Değiştir -->
                 <div id="avProfilTabSifre" style="display:none">
                     <div class="profil-card" style="max-width:480px">
                         <h3 style="font-size:1rem;font-weight:700;margin-bottom:20px">Şifre Değiştir</h3>
@@ -324,57 +358,12 @@
                     </div>
                 </div>
             </div>
+
         </main>
     </div>
 
-    <!-- AVUKAT ÖDEME MODAL -->
-    <div id="avOdemeModal" class="modal-overlay" style="display:none">
-        <div class="modal" style="max-width: 450px;">
-            <div class="modal-header">
-                <h3 class="modal-title">💳 Platform Ödemesi</h3>
-                <button class="modal-close" onclick="closeModal('avOdemeModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div id="avOdemeInfo" style="margin-bottom: 20px;">
-                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 12px;">Dava dosyasına ve
-                        müvekkil iletişim bilgilerine erişmek için platform bedelini ödemeniz gerekmektedir.</p>
-                    <div id="avOdemeTutari"
-                        style="font-size: 1.5rem; font-weight: 800; color: var(--accent); text-align: center; padding: 10px; border: 1px dashed var(--border); border-radius: 8px;">
-                        0.00 ₺
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Kart Numarası</label>
-                    <input type="text" id="avModalKartNo" class="form-input" placeholder="0000 0000 0000 0000"
-                        maxlength="19" />
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="form-group">
-                        <label class="form-label">Son Kullanma</label>
-                        <input type="text" id="avModalSonKullanma" class="form-input" placeholder="11 / 32"
-                            maxlength="7" />
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">CVV</label>
-                        <input type="text" id="avModalCVV" class="form-input" placeholder="000" maxlength="4" />
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Kart Sahibi</label>
-                    <input type="text" id="avModalKartSahibi" class="form-input" placeholder="Ad Soyad" />
-                </div>
-
-                <button id="avModalOdemeBtn" class="btn-primary btn-block" style="margin-top: 20px;">
-                    Ödemeyi Tamamla
-                </button>
-            </div>
-        </div>
-    </div>
-
-
-    <script src="/js/app.js?v=2.2"></script>
-    <script src="/js/avukat-panel.js?v=2.2"></script>
+    <script src="/js/app.js?v=3.0"></script>
+    <script src="/js/avukat-panel.js?v=3.0"></script>
 </body>
 
 </html>

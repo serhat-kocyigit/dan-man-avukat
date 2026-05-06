@@ -250,24 +250,19 @@ async function loadDavalar() {
     () => _apiCall()('GET', '/cases/benim'),
     (davalar) => {
       const statusLabels = {
-        OPEN: '⏱️ Teklif Bekleniyor',
-        MATCHING: '🧐 Avukat İnceliyor',
-        WAITING_USER_DEPOSIT: '✅ 99 TL Güven Bedeli Bekleniyor',
-        WAITING_PAYMENT: '💳 Avukat Ödemesi Bekleniyor',
-        WAITING_LAWYER_PAYMENT: '💳 Avukat Ödemesi Bekleniyor',
-        PRE_CASE_REVIEW: '🧐 Ön İnceleme',
-        PENDING_USER_AUTH: '⏳ Vekalet İsteği',
-        AUTHORIZED: '✅ Vekalet Onaylı',
-        DAVA_NO_BEKLIYOR: '🏛️ Dava No Doğrula',
+        KAYITLI: '📁 Kayıtlı',
+        AVUKAT_ARANIYOR: '🧐 Yanıt Bekleniyor',
+        ACTIVE: '🟢 Aktif Müvekkil',
+        PRE_CASE_REVIEW: '🧐 Dosya İnceleniyor',
+        PENDING_USER_AUTH: '⏳ Vekalet İsteniyor',
+        AUTHORIZED: '✅ Vekalet Verildi',
+        DAVA_NO_BEKLIYOR: '🏗️ Dosya No Onayı',
         FILED_IN_COURT: '🏛️ Dava Açıldı',
-        LAWYER_ASSIGNED: '✅ Avukat Atandı',
         IN_PROGRESS: '💬 İşlemde',
-        ACTIVE: '🟢 Aktif',
-        KAPANDI: '🛑 Kapatıldı',
-        ILK_GORUSME: '🤝 İlk Görüşme',
-        DAVA_ACILDI: '⚖️ Dava Açıldı',
-        DURUSMA: '🏛️ Duruşma',
-        TAHSIL: '💰 Tahsil Edildi'
+        DURUSMA: '🏛️ Duruşma Süreci',
+        TAHSIL: '💰 Tahsil Edildi',
+        CLOSED: '🛑 Kapatıldı',
+        CANCELED: '🚫 İptal'
       };
 
       return `<div class="dava-grid">` +
@@ -286,8 +281,8 @@ async function loadDavalar() {
                 <span class="alacak">${_formatTL()(d.tahminiAlacak)}</span>
               </div>
               <div class="dava-detail-row">
-                <span>Teklif Sayısı</span>
-                <span>${d.teklifSayisi || 0} avukat</span>
+                <span>Bekleyen Talepler</span>
+                <span>${d.bekleyenTalepSayisi || 0}</span>
               </div>
               ${renderDetayliDavaRaporu(d.hesaplamaVerisi)}
             </div>
@@ -298,9 +293,9 @@ async function loadDavalar() {
       <div class="empty-state">
         <div class="empty-icon">📁</div>
         <div class="empty-title">Henüz dava dosyanız yok.</div>
-        <div class="empty-sub">Hesaplama yapın ve avukat teklifleri alın.</div>
+        <div class="empty-sub">Hesaplama yapın ve şehrinizdeki avukatları listeleyerek iletişime geçin.</div>
         <br/>
-        <button class="btn-primary" onclick="showSection('yeniHesaplama')">Hesaplamaya Başla</button>
+        <button class="btn-primary" onclick="showSection('yeniHesaplama')">Yeni Dosya Oluştur</button>
       </div>`
   );
 }
@@ -308,64 +303,50 @@ async function loadDavalar() {
 function buildDavaActions(d) {
   let actions = '';
 
-  if (d.status === 'OPEN' && d.teklifSayisi > 0) {
+  if (d.status === 'KAYITLI') {
     actions += `<button class="btn-primary" style="width:100%"
-              onclick="loadTeklifler('${d.id}')">Teklifleri Gör (${d.bekleyenTeklif || d.teklifSayisi})</button>`;
+              onclick="loadAvukatBul('${d.id}')">🔍 Avukat Bul & İletişime Geç</button>`;
   }
-  else if (d.status === 'OPEN') {
-    actions += `<div style="font-size:0.83rem;color:var(--text-muted);text-align:center;padding:8px">⏳ Avukat teklifi bekleniyor...</div>`;
-  }
-  else if (d.status === 'MATCHING') {
-    if (d.engagementStatus === 'WAITING_USER_DEPOSIT') {
-      actions += `
-        <div style="background:rgba(0,217,163,0.08);border:1px solid rgba(0,217,163,0.3);border-radius:10px;padding:12px;margin-bottom:4px;font-size:0.85rem;color:#00d9a3;line-height:1.4">
-          ✅ <strong>Avukatınız dosyayı kabul etti!</strong><br/>
-          Süreci başlatmak için 99 TL güven bedelini ödemeniz bekleniyor.
-        </div>
-        <button class="btn-primary" style="background:linear-gradient(135deg,#00d9a3,#00b386);color:#000;width:100%;font-weight:700;"
-                onclick="goOdeme('${d.id}')">💳 99 TL Güven Bedeli Öde</button>`;
-    } else {
-      actions += `
-        <div style="background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.3);border-radius:10px;padding:12px;font-size:0.85rem;color:#ffc107;line-height:1.4">
-          🧐 <strong>Avukatınız inceliyor...</strong><br/>
-          Seçtiğiniz avukat belgelerinizi inceliyor. Kabul ettiğinde ödeme adımı açılacaktır.
+  else if (d.status === 'AVUKAT_ARANIYOR') {
+    actions += `
+        <div style="background:rgba(255,193,7,0.08);border:1px solid rgba(255,193,7,0.3);border-radius:10px;padding:12px;margin-bottom:8px;font-size:0.85rem;color:#ffc107;line-height:1.4">
+          🧐 <strong>Yanıt Bekleniyor...</strong><br/>
+          Avukata gönderdiğiniz iletişim talebi değerlendiriliyor.
         </div>`;
-    }
-  }
-  else if (d.status === 'WAITING_PAYMENT' || d.status === 'WAITING_LAWYER_PAYMENT') {
-    actions += `<div style="font-size:0.83rem;color:var(--text-muted);text-align:center;padding:8px">⏳ Avukat platform bedelini ödüyor...</div>`;
+    actions += `<button class="btn-ghost" style="width:100%" onclick="loadAvukatBul('${d.id}')">Başka Avukat Ara</button>`;
   }
   else if (d.status === 'PENDING_USER_AUTH') {
-    actions += `<button class="btn-primary" style="background:#00d9a3;color:#000;width:100%;font-weight:700;" onclick="window.approveUserAuth('${d.id}')">⚠️ Avukata Vekalet Ver (Onayla)</button>
-                <button class="btn-ghost" style="width:100%" onclick="loadMesaj('${d.id}', '${d.status}')">💬 Mesajlaş</button>`;
+    actions += `
+        <div style="background:rgba(0,217,163,0.08);border:1px solid rgba(0,217,163,0.3);border-radius:10px;padding:12px;margin-bottom:8px;font-size:0.85rem;color:var(--accent);line-height:1.4">
+          📋 <strong>Avukat Vekalet İstiyor</strong><br/>
+          Avukatınız evrakları yeterli buldu ve sizden resmi vekalet onayını bekliyor.
+        </div>
+        <button class="btn-primary" style="background:#00d9a3;color:#000;width:100%;font-weight:700" onclick="window.approveUserAuth('${d.id}')">✅ Vekaleti Onayla ve Yetkilendir</button>
+        <button class="btn-ghost" style="width:100%" onclick="loadMesaj('${d.id}', '${d.status}')">💬 Mesajlaş</button>`;
+  }
+  else if (d.status === 'DAVA_NO_BEKLIYOR') {
+    actions += `
+        <div style="background:rgba(255,179,0,0.08);border:1px solid rgba(255,179,0,0.3);border-radius:10px;padding:12px;margin-bottom:8px;font-size:0.85rem;color:#ffb300;line-height:1.4">
+          🏛️ <strong>Mahkeme Dosya Numaranız: ${d.davaNo || 'Belirtilmedi'}</strong><br/>
+          <span style="opacity:0.8">Avukatınız dava numarasını iletti. Kendi belgelerinizle örtüşüyor mu? Lütfen kontrol edip onaylayın.</span>
+        </div>
+        <button class="btn-primary" style="background:#ffb300;color:#000;width:100%;font-weight:700" onclick="window.confirmDavaNo('${d.id}', '${d.davaNo || ''}')">✔️ Numara Doğru - Onayla</button>
+        <button class="btn-ghost" style="color:#ff6b6b;border-color:rgba(255,107,107,0.3);width:100%" onclick="window.rejectDavaNo('${d.id}')">❌ Teyit Edilmiyor</button>`;
   }
   else if (d.status === 'TAHSIL') {
     const safeAciklama = (d.tahsilAciklama || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
     actions += `<button class="btn-primary" style="background:#e91e63;color:#fff;width:100%;font-weight:700;" onclick="window.confirmCollectionModal('${d.id}', '${safeAciklama}')">✔️ Tahsilatı Onayla ve Kapat</button>
                 <button class="btn-ghost" style="width:100%" onclick="loadMesaj('${d.id}', '${d.status}')">💬 Mesajlaş</button>`;
-  } else if (d.status === 'DAVA_NO_BEKLIYOR') {
-    const safeDavaNo = (d.davaNo || '').replace(/'/g, "\\'");
-    actions += `
-      <div style="background:rgba(255,179,0,0.09);border:1px solid rgba(255,179,0,0.35);border-radius:10px;padding:14px;margin-bottom:4px;">
-        <div style="font-size:0.85rem;font-weight:700;color:#ffb300;margin-bottom:8px;">🏛️ Mahkeme Dosya Numarası Hazır</div>
-        <div style="font-size:1.2rem;font-weight:900;color:#fff;letter-spacing:1px;padding:10px;background:rgba(0,0,0,0.3);border-radius:6px;margin-bottom:10px;font-family:monospace;text-align:center;border:1px solid rgba(255,255,255,0.1)">${d.davaNo || '-'}</div>
-        <div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;">Lütfen bu numaranın doğruluğunu e devletten teyit edin. Doğruysa <strong>Onayla</strong> butonuna basın.</div>
-      </div>
-      <button class="btn-primary" style="background:linear-gradient(135deg,#00d9a3,#00b386);color:#000;width:100%;font-weight:700;"
-              onclick="window.confirmDavaNo('${d.id}', '${safeDavaNo}')">✅ Dava Numarasını Onayla</button>
-      <button class="btn-ghost" style="width:100%;color:#ff6b6b;border-color:rgba(255,107,107,0.3);"
-              onclick="window.rejectDavaNo('${d.id}')">❌ Numara Yanlış</button>`;
-  }
-  else if (['PRE_CASE_REVIEW', 'AUTHORIZED', 'ACTIVE', 'LAWYER_ASSIGNED', 'FILED_IN_COURT', 'IN_PROGRESS', 'ILK_GORUSME', 'DAVA_ACILDI', 'DURUSMA'].includes(d.status)) {
+  } else if (['ACTIVE', 'PRE_CASE_REVIEW', 'AUTHORIZED', 'IN_PROGRESS', 'FILED_IN_COURT', 'DURUSMA'].includes(d.status)) {
     actions += `<button class="btn-ghost" style="width:100%"
               onclick="loadMesaj('${d.id}', '${d.status}')">💬 Mesajlaş</button>`;
-  } else if (['CLOSED', 'KAPANDI', 'CANCELED'].includes(d.status)) {
+  } else if (['CLOSED', 'CANCELED'].includes(d.status)) {
     actions += `<button class="btn-ghost" style="width:100%;color:#ff6b6b;border-color:rgba(255,107,107,0.3);background:rgba(255,107,107,0.05);cursor:not-allowed;" disabled>🔒 Dava Dosyası Kapandı</button>`;
   }
 
-  if (d.status === 'OPEN') {
+  if (d.status === 'KAYITLI') {
     actions += `<button class="btn-ghost" style="color:#ff4d4f;margin-top:4px;border:none;background:transparent"
-                onclick="window.davaSil('${d.id}')">🗑️ İlanı Sil</button>`;
+                onclick="window.davaSil('${d.id}')">🗑️ Dosyayı Sil</button>`;
   }
 
   return actions;
@@ -532,249 +513,126 @@ window.confirmCollectionModal = function (caseId, aciklama) {
   };
 };
 
-// ---- TEKLİFLER ----
-async function loadTeklifler(caseId) {
+// ---- AVUKAT BUL ----
+async function loadAvukatBul(caseId) {
   activeCaseId = caseId;
+  showSection('avukatBul');
 
-  // Önce section'ı aç
-  showSection('teklifler');
-
-  const container = document.getElementById('tekliflerListesi');
+  const container = document.getElementById('avukatlarListesi');
   if (!container) return;
 
-  // Önceki bu davaya ait içerik varsa koru, yoksa spinner
-  if (container.dataset.caseId !== caseId) {
-    container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Teklifler yükleniyor...</p></div>`;
-    container.dataset.caseId = caseId;
-    delete container.dataset.lastHTML;
-  }
+  container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Bölgenizdeki avukatlar listeleniyor...</p></div>`;
 
   try {
-    const teklifler = await _apiCall()('GET', `/offers/case/${caseId}`);
-    const bekleyenler = teklifler.filter(t => t.status === 'PENDING');
+    const caseData = await _apiCall()('GET', `/cases/${caseId}`);
+    const sehir = caseData.sehir || 'İstanbul'; // Varsayılan
 
-    const subtitle = document.getElementById('teklifSubtitle');
-    if (subtitle) subtitle.textContent = `${bekleyenler.length} avukattan teklif geldi.`;
+    const avukatlar = await _apiCall()('GET', `/offers/avukatlar?sehir=${encodeURIComponent(sehir)}&caseId=${caseId}`);
 
-    if (!bekleyenler.length) {
+    if (!avukatlar.length) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="empty-icon">⏳</div>
-          <div class="empty-title">Henüz teklif gelmedi.</div>
-          <div class="empty-sub">Avukatlar tekliflerini hazırlıyor.</div>
-          <br/>
-          <button class="btn-ghost" onclick="showSection('davalarim')">← Davalara Dön</button>
+          <div class="empty-icon">😢</div>
+          <div class="empty-title">Avukat Bulunamadı</div>
+          <div class="empty-sub">${sehir} şehrinde henüz kayıtlı avukatımız bulunmuyor.</div>
         </div>`;
       return;
     }
 
-    // Cache in global offers context mapping reviews efficiently.
-    window._cachedTeklifler = bekleyenler;
+    window._cachedAvukatlar = avukatlar;
 
-    const newHTML = `<div class="teklif-grid">` +
-      bekleyenler.map((t, i) => `
-        <div class="teklif-card" id="teklif-${t.id}">
+    const html = `<div class="teklif-grid">` +
+      avukatlar.map((a, i) => `
+        <div class="teklif-card">
           <div class="teklif-header">
-            <span class="teklif-no">⚖️ Anonim Avukat ${i + 1}</span>
-            <span class="status-badge status-PENDING">Beklemede</span>
+            <span class="teklif-no">⚖️ ${a.unvan || 'Av.'} ${a.ad} ${a.soyad}</span>
+            <span class="status-badge status-ACTIVE">${a.sehir}</span>
           </div>
-          
-          <div style="background:var(--bg-main); padding:8px; border-radius:6px; margin:10px 0; text-align:center; display:flex; flex-direction:column; align-items:center; border:1px solid rgba(0,0,0,0.05);">
-             <div style="color:gold; font-size:1.1rem; margin-bottom:4px;">${'★'.repeat(Math.round(t.ortalamaPuan || 0))}${'☆'.repeat(5 - Math.round(t.ortalamaPuan || 0))} <span style="color:var(--text-color); font-size:0.9rem; font-weight:600;">${t.ortalamaPuan}</span></div>
-             <a href="javascript:void(0)" onclick="showAvukatYorumlari('${t.id}')" style="font-size:0.8rem; color:var(--primary); text-decoration:underline;">
-               💬 ${t.yorumSayisi} Müvekkil Yorumunu Oku
-             </a>
+          <div style="text-align:center; margin:10px 0;">
+            <div style="color:gold; font-size:1.1rem; margin-bottom:4px;">${'★'.repeat(Math.round(a.ortalamaPuan || 0))}${'☆'.repeat(5 - Math.round(a.ortalamaPuan || 0))} <span style="color:var(--text-color); font-size:0.9rem; font-weight:600;">${a.ortalamaPuan}</span></div>
+            <div style="font-size:0.8rem; color:var(--text-secondary);">${a.yorumSayisi} Değerlendirme</div>
           </div>
-
-          <div class="teklif-ucret">
-            ${t.ucretModeli === 'yuzde' ? `%${t.oran}` : _formatTL()(Number(t.sabitUcret) || 0)}
+          <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.4; margin-bottom:12px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;">
+            ${a.bio || 'İş hukuku ve işçi alacakları konusunda deneyimli avukat.'}
           </div>
-          <div class="teklif-model">
-            ${t.ucretModeli === 'yuzde' ? 'Yüzde usulü ücret' : 'Sabit ücret'} &nbsp;•&nbsp;
-            ${t.onOdeme ? '⚠️ Ön ödeme var' : '✅ Ön ödeme yok'}
+          <div style="margin-bottom:12px;">
+            ${(a.uzmanlik || []).map(u => `<span style="display:inline-block; background:var(--bg-main); padding:3px 8px; border-radius:4px; font-size:0.75rem; margin:0 4px 4px 0; border:1px solid var(--border);">${u}</span>`).join('')}
           </div>
-          <div class="teklif-detail">
-            <div class="teklif-detail-row">
-              <span>Tahmini Süre</span><span>${t.tahminiSure}</span>
-            </div>
-          </div>
-          ${t.aciklama ? `<div class="teklif-aciklama">"${t.aciklama}"</div>` : ''}
-          <button class="btn-primary btn-block" onclick="teklifSec('${t.id}')">
-            Bu Teklifi Seç →
+          <button class="btn-primary btn-block" 
+            ${a.talepGonderildi ? 'disabled style="background:var(--border); color:var(--text-muted); cursor:not-allowed; border-color:var(--border);"' : `onclick="iletisimTalebiGonderModal('${a.id}')"`}>
+            ${a.talepGonderildi ? '✅ Talep Gönderildi' : 'İletişim Talebi Gönder →'}
           </button>
         </div>`).join('') + `</div>`;
 
-    if (container.dataset.lastHTML !== newHTML) {
-      container.innerHTML = newHTML;
-      container.dataset.lastHTML = newHTML;
-    }
+    container.innerHTML = html;
   } catch (err) {
     _showToast()(err.message, 'error');
     container.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">${err.message}</div></div>`;
   }
 }
 
-window.showAvukatYorumlari = function (teklifId) {
-  const teklif = (window._cachedTeklifler || []).find(t => t.id === teklifId);
-  if (!teklif || !teklif.yorumlar || !teklif.yorumlar.length) {
-    _showToast()('Bu avukat için henüz hiç yorum bulunmuyor.', 'info');
-    return;
-  }
+window.iletisimTalebiGonderModal = function (avukatId) {
+  const avukat = window._cachedAvukatlar?.find(a => a.id === avukatId);
+  if (!avukat) return;
 
   const modal = document.createElement('div');
   modal.className = 'modal-overlay';
   modal.style.display = 'flex';
-
-  let commentsHtml = teklif.yorumlar.map(y => `
-    <div style="background:var(--bg-main); padding:12px; border-radius:8px; margin-bottom:12px; border:1px solid var(--border);">
-       <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-          <strong style="font-size:0.85rem; color:var(--text-color);">Müvekkil Yorumu</strong>
-          <span style="color:gold; font-size:0.9rem;">${'★'.repeat(y.puan)}${'☆'.repeat(5 - y.puan)}</span>
-       </div>
-       <div style="font-size:0.9rem; color:var(--text-secondary); line-height:1.4;">"${y.yorum || 'Yorum yazılmamış.'}"</div>
-       <div style="font-size:0.75rem; color:var(--text-muted); text-align:right; margin-top:8px;">${new Date(y.created_at || y.tarih).toLocaleDateString('tr-TR')}</div>
-    </div>
-  `).join('');
-
   modal.innerHTML = `
-    <div class="modal" style="width:100%; max-width:500px; padding:24px; border-radius:12px; max-height:80vh; display:flex; flex-direction:column;">
-      <h2 style="font-size:1.2rem; margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:12px;">⚖️ Avukat Değerlendirmeleri</h2>
-      <div style="overflow-y:auto; flex:1; padding-right:8px;">
-         ${commentsHtml}
+    <div class="modal" style="width:100%; max-width:450px;">
+      <h3 class="modal-title" style="font-size:1.1rem;">İletişim Talebi</h3>
+      <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:16px;">
+        ${avukat.unvan || 'Av.'} ${avukat.ad} ${avukat.soyad}'a davanızla ilgilenmesi için talep göndereceksiniz.
+      </p>
+      <div class="form-group">
+        <label class="form-label">Avukata Notunuz (İsteğe bağlı)</label>
+        <textarea id="talepNot" class="form-input" rows="3" placeholder="Davanız hakkında kısa bilgi verebilirsiniz. Lütfen telefon veya e-posta YAZMAYIN, aksi takdirde sistem engeller."></textarea>
       </div>
-      <button class="btn-ghost" style="width:100%; margin-top:16px; padding:12px;" onclick="this.closest('.modal-overlay').remove()">Kapat</button>
+      <div style="background:rgba(230,57,70,0.08);border:1px dashed rgba(230,57,70,0.3);padding:10px;border-radius:6px;font-size:0.8rem;color:var(--text-secondary);margin-bottom:16px;">
+        ⚠️ Not alanına iletişim bilgilerinizi yazarsanız talebiniz reddedilir. Avukat talebinizi kabul ettiğinde iletişim bilgileriniz karşılıklı açılacaktır.
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn-ghost" style="flex:1" onclick="this.closest('.modal-overlay').remove()">İptal</button>
+        <button class="btn-primary" style="flex:1" id="talepGonderBtn" onclick="iletisimTalebiGonder('${avukatId}', this)">Talebi Gönder</button>
+      </div>
     </div>
   `;
   document.body.appendChild(modal);
-};
+}
 
-async function teklifSec(offerId) {
-  const isConfirmed = await window.HakPortal.showConfirm(
-    'Bu teklifi seçmek istediğinizden emin misiniz?\n\nDiğer teklifler reddedilecek ve seçtiğiniz avukata belgeleriniz iletilecektir.\nAvukat dosyanızı inceleyip kabul ederse size bildirim gönderilecektir.'
-  );
-  if (!isConfirmed) return;
-
-  const btn = document.querySelector(`#teklif-${offerId} .btn-primary`);
-  if (btn) { btn.disabled = true; btn.textContent = 'İşleniyor...'; }
+window.iletisimTalebiGonder = async function (avukatId, btn) {
+  const not = document.getElementById('talepNot')?.value?.trim();
+  btn.disabled = true;
+  btn.textContent = 'Gönderiliyor...';
 
   try {
-    const result = await _apiCall()('PUT', `/offers/${offerId}/sec`);
-    activeOfferId = offerId;
+    const res = await _apiCall()('POST', '/offers/iletisim-talebi', { avukatId, caseId: activeCaseId, not });
+    _showToast()(res.message || 'İletişim talebi başarıyla gönderildi!', 'success');
+    btn.closest('.modal-overlay').remove();
 
-    // Ödeme ekranına GİTME — avukat önce belgeleri inceleyip kabul etmeli
-    _showToast()('Teklif seçildi! ✅ Avukat belgelerinizi inceleyecek. Kabul ederse bildirim alacaksınız.', 'success');
+    // Dava durumunu pending (AVUKAT_ARANIYOR) yap (manuel güncelleme)
+    await _apiCall()('PUT', `/cases/${activeCaseId}/status`, { status: 'AVUKAT_ARANIYOR', aciklama: 'Kullanıcı iletişim talebi gönderdi.' });
 
-    // Dava listesini yenile ve o sayfaya dön
     const davaCont = document.getElementById('davalarListesi');
     if (davaCont) { delete davaCont.dataset.loaded; delete davaCont.dataset.lastHTML; }
-
-    setTimeout(() => showSection('davalarim'), 1500);
+    showSection('davalarim');
   } catch (err) {
     _showToast()(err.message, 'error');
-    if (btn) { btn.disabled = false; btn.textContent = 'Bu Teklifi Seç →'; }
-  }
-}
-
-// ---- ÖDEME ----
-function loadOdeme(offerId, tutar, caseId) {
-  activeOfferId = offerId;
-  showSection('odeme');
-
-  const infoCard = document.getElementById('odemeInfoCard');
-  if (infoCard) {
-    infoCard.innerHTML = `
-      <h3 style="margin-bottom:16px;font-size:1rem;font-weight:700">⚖️ Güven (Ciddiyet) Ödemesi</h3>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="dava-detail-row"><span>Hizmet</span><span>Platform Ciddiyet Bedeli</span></div>
-        <div class="dava-detail-row"><span>Kapsam</span><span>Avukatla Eşleşme Güvencesi</span></div>
-        <div style="margin-top:8px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-          <span style="font-weight:700">Toplam</span>
-          <span style="font-size:1.8rem;font-weight:900;color:var(--accent)">${_formatTL()(99)}</span>
-        </div>
-      </div>
-      <div style="margin-top:16px;padding:12px;background:rgba(0,217,163,0.08);border-radius:8px;font-size:0.82rem;color:var(--accent)">
-        ✅ Avukat atamayı yapmazsa paranız cüzdanınıza %100 oranında iade edilecektir.
-      </div>`;
-  }
-
-  const odemeBtn = document.getElementById('odemeBtn');
-  if (odemeBtn) {
-    odemeBtn.dataset.offerId = offerId;
-    odemeBtn.style.display = 'block';
-    odemeBtn.disabled = false;
-    odemeBtn.textContent = 'Ödemeyi Tamamla';
-  }
-
-  ['kartNo', 'sonKullanma', 'cvv', 'kartSahibi'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-}
-
-async function goOdeme(caseId) {
-  try {
-    const caseData = await _apiCall()('GET', `/cases/${caseId}`);
-    const secilenTeklif = caseData.teklifler?.find(t => t.status === 'SELECTED');
-    if (secilenTeklif) {
-      loadOdeme(secilenTeklif.id, 99, caseId);
-    } else {
-      _showToast()('Seçili teklif bulunamadı.', 'error');
-    }
-  } catch (err) {
-    _showToast()(err.message, 'error');
-  }
-}
-
-async function doOdeme() {
-  const odemeBtn = document.getElementById('odemeBtn');
-  const offerId = odemeBtn?.dataset.offerId;
-  if (!offerId) { _showToast()('Teklif bilgisi eksik.', 'error'); return; }
-
-  const kartNo = document.getElementById('kartNo')?.value.replace(/\s/g, '');
-  const sonKullanma = document.getElementById('sonKullanma')?.value;
-  const cvv = document.getElementById('cvv')?.value;
-  const kartSahibi = document.getElementById('kartSahibi')?.value;
-
-  if (!kartNo || kartNo.length < 16) { _showToast()('Geçerli kart numarası girin.', 'error'); return; }
-  if (!sonKullanma || !sonKullanma.includes('/')) { _showToast()('Son kullanma tarihi eksik.', 'error'); return; }
-  if (!cvv || cvv.length < 3) { _showToast()('CVV eksik.', 'error'); return; }
-  if (!kartSahibi?.trim() || kartSahibi.trim().length < 3) { _showToast()('Kart sahibi adı eksik.', 'error'); return; }
-
-  odemeBtn.disabled = true;
-  odemeBtn.textContent = '⏳ İşleniyor...';
-
-  try {
-    const result = await _apiCall()('POST', `/offers/${offerId}/kullanici-odeme`, { kartNo, kartSahibi, sonKullanma, cvv });
-    _showToast()('Güven ödemesi başarılı! 🎉', 'success');
-
-    const infoCard = document.getElementById('odemeInfoCard');
-    if (infoCard) {
-      infoCard.innerHTML = `
-        <div style="text-align:center;padding:20px">
-          <div style="font-size:3.5rem;margin-bottom:16px">⏳</div>
-          <h3 style="font-size:1.3rem;font-weight:800;margin-bottom:8px;color:var(--accent)">Avukat Onayı Bekleniyor!</h3>
-          <p style="color:var(--text-secondary);margin-bottom:20px;font-size:0.9rem">
-            Siz ciddiyet bedelini ödediniz. Şimdi avukatınız 24 saat içerisinde platform hizmet bedelini ödeyip sizinle doğrudan iletişime geçecektir.
-          </p>
-          <button class="btn-primary btn-block" style="margin-top:20px" onclick="loadDavalar(); showSection('davalarim')">
-            📋 Davalarıma Dön
-          </button>
-        </div>`;
-    }
-    if (odemeBtn) odemeBtn.style.display = 'none';
-
-    // Dava listesi cache'ini temizle - güncel durum için
-    const davaCont = document.getElementById('davalarListesi');
-    if (davaCont) { delete davaCont.dataset.loaded; delete davaCont.dataset.lastHTML; }
-
-  } catch (err) {
-    _showToast()(err.message, 'error');
-    odemeBtn.disabled = false;
-    odemeBtn.textContent = 'Ödemeyi Tamamla';
+    btn.disabled = false;
+    btn.textContent = 'Talebi Gönder';
   }
 }
 
 // ---- MESAJLAR ----
+
+// Mesajlar için global state (avukat paneliyle aynı)
+let _kullaniciMesajState = {
+  activeTab: 'aktif',
+  searchQuery: '',
+  allCases: [],
+  lastMessages: {}
+};
+
 async function loadMesajlar() {
   const container = document.getElementById('mesajlarListesi');
   if (!container) return;
@@ -782,67 +640,281 @@ async function loadMesajlar() {
   // Zaten mesaj sohbeti açıksa tekrar listeleme yapma
   if (container.querySelector('.messages-container')) return;
 
-  if (!container.innerHTML.trim() || !container.dataset.loaded) {
-    container.innerHTML = `<div class="loading-spinner"><div class="spinner"></div><p>Yükleniyor...</p></div>`;
-  }
+  container.innerHTML = `
+    <div style="padding:60px 20px; text-align:center;">
+      <div class="loading-spinner" style="width:50px; height:50px; margin:0 auto 20px;"></div>
+      <p style="color:var(--text-muted);">Mesajlar yükleniyor...</p>
+    </div>`;
 
   try {
+    const token = localStorage.getItem('hp_token');
+    if (!token) throw new Error('Oturum kapalı');
+
+    // Tüm davaları çek
     const davalar = await _apiCall()('GET', '/cases/benim');
-    const aktif = davalar.filter(d =>
-      ['PRE_CASE_REVIEW', 'PENDING_USER_AUTH', 'AUTHORIZED', 'ACTIVE', 'LAWYER_ASSIGNED', 'FILED_IN_COURT', 'IN_PROGRESS', 'ILK_GORUSME', 'DAVA_ACILDI', 'DURUSMA', 'TAHSIL', 'CLOSED', 'KAPANDI'].includes(d.status)
-    );
+    if (!davalar || !Array.isArray(davalar)) throw new Error('Geçersiz veri');
+
+    // Son mesajları çek
+    await _loadKullaniciLastMessages(davalar.map(d => d.id), token);
+
+    _kullaniciMesajState.allCases = davalar;
+    _renderKullaniciMesajlarUI();
 
     container.dataset.loaded = '1';
-
-    if (!aktif.length) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">💬</div>
-          <div class="empty-title">Aktif dava yok.</div>
-          <div class="empty-sub">Ödeme tamamlandıktan sonra mesajlaşabilirsiniz.</div>
-          <br/>
-          <button class="btn-primary" onclick="showSection('davalarim')">📋 Davalarıma Git</button>
-        </div>`;
-      return;
-    }
-
-    if (aktif.length === 1) {
-      loadMesaj(aktif[0].id, aktif[0].status);
-    } else {
-      container.innerHTML = `
-        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px">Hangi dava ile mesajlaşmak istiyorsunuz?</h3>
-        <div class="dava-grid">
-          ${aktif.map(d => {
-        const kisaltilmisTarih = new Date(d.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
-        return `
-            <div class="dava-card" style="cursor:pointer; border-left:4px solid var(--primary-light);" onclick="loadMesaj('${d.id}', '${d.status}')">
-              ${d.avukatAd ? `
-              <div style="margin-bottom:12px;display:flex; gap:10px; align-items:center;">
-                <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;background:var(--primary-dark);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.1rem;color:#fff;">
-                  ${d.avukatAvatar ? `<img src="${d.avukatAvatar}" style="width:100%;height:100%;object-fit:cover;">` : d.avukatAd.charAt(0)}
-                </div>
-                <div>
-                  <div style="font-size:0.9rem;font-weight:700">${d.avukatAd} ${d.avukatSoyad}</div>
-                  <div style="font-size:0.75rem;color:var(--text-secondary)">Avukat</div>
-                </div>
-              </div>` : ''}
-              <div class="dava-card-title">${d.davaTuru || 'Hukuki Danışmanlık'}</div>
-              <div class="dava-card-sub">${d.sehir} • ${kisaltilmisTarih}</div>
-              <div style="font-size:0.8rem; margin-top:8px; color:var(--text-light);">
-                Toplam Alacak: <strong style="color:var(--accent)">${_formatTL()(d.tahminiAlacak)}</strong>
-              </div>
-              <div class="dava-card-actions" style="margin-top:12px; position:relative;">
-                ${d.okunmamisMesaj > 0 ? `<div style="position:absolute; top:-35px; right:0px; background:#e63946; color:#fff; font-size:0.7rem; font-weight:bold; padding:4px 8px; border-radius:12px; box-shadow:0 0 10px rgba(230,57,70,0.6); animation: pulse 1.5s infinite;">🔔 ${d.okunmamisMesaj} Yeni Mesaj</div>` : ''}
-                <button class="btn-primary" style="font-size:0.85rem;padding:8px 14px; width:100%">💬 Sohbeti Aç</button>
-              </div>
-            </div>`;
-      }).join('')}
-        </div>`;
-    }
   } catch (err) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">${err.message}</div></div>`;
+    container.innerHTML = `
+      <div class="empty-state" style="text-align:center;padding:60px 20px;">
+        <div style="font-size:3rem;margin-bottom:15px;">⚠️</div>
+        <h3 style="margin-bottom:10px;color:#e63946;">${err.message}</h3>
+        <button onclick="loadMesajlar()" class="btn-primary" style="margin-top:20px;">🔄 Tekrar Dene</button>
+      </div>`;
   }
 }
+
+async function _loadKullaniciLastMessages(caseIds, token) {
+  try {
+    for (const caseId of caseIds) {
+      const res = await fetch('/api/messages/' + caseId + '?limit=1', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if (res.ok) {
+        const messages = await res.json();
+        if (messages.length > 0) {
+          _kullaniciMesajState.lastMessages[caseId] = messages[messages.length - 1];
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Son mesajlar yüklenirken hata:', e);
+  }
+}
+
+function _getKullaniciStatusLabel(status) {
+  const labels = {
+    'PRE_CASE_REVIEW': { text: '📋 Ön İnceleme', color: '#6366f1' },
+    'PENDING_USER_AUTH': { text: '⏳ Vekalet Bekliyor', color: '#f59e0b' },
+    'AUTHORIZED': { text: '✅ Vekalet Onaylı', color: '#10b981' },
+    'FILED_IN_COURT': { text: '🏛️ Dava Açıldı', color: '#8b5cf6' },
+    'IN_PROGRESS': { text: '🔄 Süreç Devam Ediyor', color: '#3b82f6' },
+    'DURUSMA': { text: '⚖️ Duruşma', color: '#ec4899' },
+    'TAHSIL': { text: '💰 Tahsilat', color: '#14b8a6' },
+    'CLOSED': { text: '🔒 Kapandı', color: '#6b7280' },
+    'CANCELED': { text: '❌ İptal Edildi', color: '#ef4444' },
+    'KAPANDI': { text: '🔒 Kapandı', color: '#6b7280' }
+  };
+  return labels[status] || { text: status, color: '#9ca3af' };
+}
+
+function _formatKullaniciMesajTarih(tarih) {
+  if (!tarih) return '';
+  const date = new Date(tarih);
+  const now = new Date();
+  const diff = now - date;
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+  if (days === 0) {
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    if (hours === 0) {
+      const minutes = Math.floor(diff / (1000 * 60));
+      return minutes < 1 ? 'Şimdi' : `${minutes} dk önce`;
+    }
+    return `${hours} saat önce`;
+  } else if (days === 1) {
+    return 'Dün';
+  } else if (days < 7) {
+    return `${days} gün önce`;
+  }
+  return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
+}
+
+function _renderKullaniciMesajlarUI() {
+  const container = document.getElementById('mesajlarListesi');
+  if (!container) return;
+
+  const aktifDurumlar = ['PRE_CASE_REVIEW', 'PENDING_USER_AUTH', 'AUTHORIZED', 'ACTIVE', 'LAWYER_ASSIGNED', 'FILED_IN_COURT', 'IN_PROGRESS', 'ILK_GORUSME', 'DAVA_ACILDI', 'DURUSMA', 'TAHSIL'];
+  const kapaliDurumlar = ['CLOSED', 'CANCELED', 'KAPANDI'];
+
+  // Filtrele
+  let filteredCases = _kullaniciMesajState.allCases;
+  if (_kullaniciMesajState.searchQuery) {
+    const q = _kullaniciMesajState.searchQuery.toLowerCase();
+    filteredCases = filteredCases.filter(d => {
+      const avukat = d.avukatAd || '';
+      return avukat.toLowerCase().includes(q) ||
+             (d.davaTuru || '').toLowerCase().includes(q) ||
+             (d.sehir || '').toLowerCase().includes(q);
+    });
+  }
+
+  const aktifSohbetler = filteredCases.filter(d => aktifDurumlar.includes(d.status));
+  const gecmisSohbetler = filteredCases.filter(d => kapaliDurumlar.includes(d.status));
+
+  // Toplam okunmamış
+  const totalUnread = _kullaniciMesajState.allCases.reduce((sum, d) => sum + (d.okunmamisMesaj || 0), 0);
+  const aktifUnread = aktifSohbetler.reduce((sum, d) => sum + (d.okunmamisMesaj || 0), 0);
+
+  let html = `
+    <div style="max-width:1200px; margin:0 auto;">
+      <!-- Header -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:15px;">
+        <div>
+          <h2 style="font-size:1.5rem; font-weight:700; margin-bottom:4px;">💬 Mesajlar</h2>
+          <p style="color:var(--text-muted); font-size:0.9rem;">Avukatınızla iletişim</p>
+        </div>
+        ${totalUnread > 0 ? `<div style="background:#e63946; color:#fff; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600;">� ${totalUnread} Okunmamış</div>` : ''}
+      </div>
+
+      <!-- Arama -->
+      <div style="margin-bottom:24px;">
+        <div style="position:relative; max-width:400px;">
+          <input type="text"
+                 id="kullaniciMesajSearchInput"
+                 placeholder="Avukat veya dava ara..."
+                 value="${_kullaniciMesajState.searchQuery}"
+                 oninput="_onKullaniciMesajSearch(this.value)"
+                 style="width:100%; padding:12px 16px 12px 44px; border-radius:12px; border:1px solid var(--border); background:var(--bg-card); color:var(--text-color); font-size:0.95rem; outline:none;">
+          <span style="position:absolute; left:16px; top:50%; transform:translateY(-50%); font-size:1.1rem;">🔍</span>
+          ${_kullaniciMesajState.searchQuery ? `<button onclick="_onKullaniciMesajSearch('')" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.2rem; color:var(--text-muted);">×</button>` : ''}
+        </div>
+      </div>
+
+      <!-- Tablar -->
+      <div style="display:flex; gap:8px; margin-bottom:24px; border-bottom:2px solid var(--border); padding-bottom:0;">
+        <button onclick="_switchKullaniciMesajTab('aktif')"
+                style="padding:12px 24px; border:none; background:none; font-size:0.95rem; font-weight:600; cursor:pointer; position:relative; color:${_kullaniciMesajState.activeTab === 'aktif' ? 'var(--accent)' : 'var(--text-muted)'}; transition:all 0.2s;">
+          � Aktif Sohbetler
+          ${aktifUnread > 0 ? `<span style="background:#e63946; color:#fff; padding:2px 8px; border-radius:10px; font-size:0.7rem; margin-left:6px;">${aktifUnread}</span>` : ''}
+          ${_kullaniciMesajState.activeTab === 'aktif' ? '<span style="position:absolute; bottom:-2px; left:0; right:0; height:3px; background:var(--accent); border-radius:3px 3px 0 0;"></span>' : ''}
+        </button>
+        <button onclick="_switchKullaniciMesajTab('gecmis')"
+                style="padding:12px 24px; border:none; background:none; font-size:0.95rem; font-weight:600; cursor:pointer; position:relative; color:${_kullaniciMesajState.activeTab === 'gecmis' ? 'var(--accent)' : 'var(--text-muted)'}; transition:all 0.2s;">
+          📁 Geçmiş Sohbetler
+          ${_kullaniciMesajState.activeTab === 'gecmis' ? '<span style="position:absolute; bottom:-2px; left:0; right:0; height:3px; background:var(--accent); border-radius:3px 3px 0 0;"></span>' : ''}
+        </button>
+      </div>
+  `;
+
+  // Aktif Sekme
+  if (_kullaniciMesajState.activeTab === 'aktif') {
+    if (aktifSohbetler.length === 0) {
+      html += `
+        <div style="text-align:center; padding:60px 20px; background:var(--bg-card); border-radius:16px; border:1px dashed var(--border);">
+          <div style="font-size:4rem; margin-bottom:20px;">💬</div>
+          <h3 style="font-size:1.3rem; margin-bottom:10px;">Aktif Sohbet Bulunmuyor</h3>
+          <p style="color:var(--text-muted); max-width:400px; margin:0 auto;">
+            ${_kullaniciMesajState.searchQuery ? 'Arama kriterlerine uygun sohbet bulunamadı.' : 'Aktif davanız bulunmamaktadır. Ödeme tamamlandıktan sonra mesajlaşmaya başlayabilirsiniz.'}
+          </p>
+          ${_kullaniciMesajState.searchQuery ? '<button onclick="_onKullaniciMesajSearch(\'\')" class="btn-ghost" style="margin-top:20px;">Aramayı Temizle</button>' : `<button class="btn-primary" onclick="showSection('davalarim')" style="margin-top:20px;">📋 Davalarıma Git</button>`}
+        </div>`;
+    } else {
+      html += `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:20px;">`;
+      aktifSohbetler.forEach(d => {
+        html += _renderKullaniciMesajCard(d, true);
+      });
+      html += `</div>`;
+    }
+  }
+
+  // Geçmiş Sekme
+  if (_kullaniciMesajState.activeTab === 'gecmis') {
+    if (gecmisSohbetler.length === 0) {
+      html += `
+        <div style="text-align:center; padding:60px 20px; background:var(--bg-card); border-radius:16px; border:1px dashed var(--border);">
+          <div style="font-size:4rem; margin-bottom:20px;">📁</div>
+          <h3 style="font-size:1.3rem; margin-bottom:10px;">Geçmiş Sohbet Bulunmuyor</h3>
+          <p style="color:var(--text-muted); max-width:400px; margin:0 auto;">
+            ${_kullaniciMesajState.searchQuery ? 'Arama kriterlerine uygun sohbet bulunamadı.' : 'Kapanmış veya iptal edilmiş dava mesajlarınız burada görünür.'}
+          </p>
+          ${_kullaniciMesajState.searchQuery ? '<button onclick="_onKullaniciMesajSearch(\'\')" class="btn-ghost" style="margin-top:20px;">Aramayı Temizle</button>' : ''}
+        </div>`;
+    } else {
+      html += `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:20px;">`;
+      gecmisSohbetler.forEach(d => {
+        html += _renderKullaniciMesajCard(d, false);
+      });
+      html += `</div>`;
+    }
+  }
+
+  html += `</div>`;
+  container.innerHTML = html;
+}
+
+function _renderKullaniciMesajCard(d, isActive) {
+  const avukatAd = d.avukatAd || 'Avukat';
+  const avukatSoyad = d.avukatSoyad || '';
+  const avatar = d.avukatAvatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${avukatAd}`;
+  const statusInfo = _getKullaniciStatusLabel(d.status);
+  const lastMsg = _kullaniciMesajState.lastMessages[d.id];
+  const unread = d.okunmamisMesaj || 0;
+
+  return `
+    <div onclick="loadMesaj('${d.id}', '${d.status}')"
+         style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:20px; cursor:pointer; transition:all 0.2s; position:relative; ${unread > 0 ? 'box-shadow:0 0 0 2px #e63946;' : ''}"
+         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(0,0,0,0.15)'${unread > 0 ? ', 0 0 0 2px #e63946' : ''};"
+         onmouseout="this.style.transform=''; this.style.boxShadow=''${unread > 0 ? '0 0 0 2px #e63946' : ''};"">
+
+      ${unread > 0 ? `<div style="position:absolute; top:-8px; right:-8px; background:#e63946; color:#fff; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:700; box-shadow:0 2px 8px rgba(230,57,70,0.4);">${unread}</div>` : ''}
+
+      <div style="display:flex; align-items:flex-start; gap:14px; margin-bottom:16px;">
+        <img src="${avatar}"
+             style="width:52px; height:52px; border-radius:50%; object-fit:cover; border:2px solid ${statusInfo.color}; flex-shrink:0;"
+             onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\\'width:52px;height:52px;border-radius:50%;background:${statusInfo.color};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;font-size:1.2rem;border:2px solid ${statusInfo.color};\\'>${avukatAd.charAt(0)}</div>';">
+
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+            <h4 style="font-weight:700; font-size:1rem; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${avukatAd} ${avukatSoyad}</h4>
+            ${lastMsg ? `<span style="font-size:0.75rem; color:var(--text-muted); flex-shrink:0;">${_formatKullaniciMesajTarih(lastMsg.tarih)}</span>` : ''}
+          </div>
+          <div style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">${d.davaTuru || 'Hukuki Danışmanlık'}</div>
+          <div style="display:flex; align-items:center; gap:6px; margin-top:6px;">
+            <span style="width:8px; height:8px; border-radius:50%; background:${statusInfo.color};"></span>
+            <span style="font-size:0.8rem; color:${statusInfo.color}; font-weight:500;">${statusInfo.text}</span>
+          </div>
+        </div>
+      </div>
+
+      ${lastMsg ? `
+        <div style="background:var(--bg-surface); border-radius:10px; padding:12px; margin-top:12px;">
+          <div style="font-size:0.9rem; color:var(--text-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            <strong style="color:var(--text-color);">${lastMsg.gonderenId === (JSON.parse(atob(localStorage.getItem('hp_token').split('.')[1])).id) ? 'Siz:' : 'Avukat:'}</strong>
+            ${lastMsg.icerik}
+          </div>
+        </div>
+      ` : `
+        <div style="background:var(--bg-surface); border-radius:10px; padding:12px; margin-top:12px; text-align:center;">
+          <span style="font-size:0.85rem; color:var(--text-muted);">Henüz mesaj yok - Sohbeti başlatın</span>
+        </div>
+      `}
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted);">📍 ${d.sehir || 'Belirsiz'}</div>
+          <div style="font-size:0.8rem; margin-top:4px; color:var(--accent); font-weight:600;">
+            ${_formatTL()(d.tahminiAlacak)}
+          </div>
+        </div>
+        <button class="btn-primary" style="padding:8px 16px; font-size:0.85rem;">
+          ${isActive ? '💬 Sohbeti Aç' : '📋 Geçmişi Gör'}
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function _onKullaniciMesajSearch(query) {
+  _kullaniciMesajState.searchQuery = query;
+  _renderKullaniciMesajlarUI();
+}
+
+function _switchKullaniciMesajTab(tab) {
+  _kullaniciMesajState.activeTab = tab;
+  _renderKullaniciMesajlarUI();
+}
+
+// Global fonksiyonları window'a ata
+window._onKullaniciMesajSearch = _onKullaniciMesajSearch;
+window._switchKullaniciMesajTab = _switchKullaniciMesajTab;
 
 async function loadMesaj(caseId, status = '') {
   // Zaten bu dava açıksa tekrar yükleme
@@ -925,10 +997,11 @@ async function fetchMesajlar(caseId) {
 
     // Değişiklik yoksa DOM'a dokunma
     const newHTML = mesajlar.map(m => {
-      let avatarHtml = `<div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--primary-dark);display:flex;align-items:center;justify-content:center;font-size:0.8rem;color:#fff;font-weight:bold;flex-shrink:0;">${m.gonderenAd.charAt(0)}</div>`;
-      if (m.avatar) {
-        avatarHtml = `<img src="${m.avatar}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="Avatar"/>`;
-      }
+      const isMine = m.gonderenId === myId;
+      const avatar = m.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${m.gonderenAd || 'user'}`;
+      const initial = (m.gonderenAd || 'U').charAt(0).toUpperCase();
+
+      // Dosya/evrak mesajı kontrolü
       let msgHtml = m.icerik;
       if (m.icerik.startsWith('/uploads/')) {
         const parts = m.icerik.split('|');
@@ -940,7 +1013,7 @@ async function fetchMesajlar(caseId) {
         if (isImage) {
           msgHtml = `<div style="max-width:220px; border-radius:8px; overflow:hidden; margin-bottom:4px;">
                       <a href="${fileUrl}" target="_blank">
-                        <img src="${fileUrl}" style="width:100%; display:block;" alt="Resim"/>
+                        <img src="${fileUrl}" style="width:100%; display:block; border-radius:8px;" alt="Resim"/>
                       </a>
                    </div>
                    <a href="${fileUrl}" target="_blank" style="color:inherit; text-decoration:underline; font-size:0.75rem; word-break:break-all;">📎 ${originalName}</a>`;
@@ -956,11 +1029,29 @@ async function fetchMesajlar(caseId) {
       }
 
       return `
-      <div class="message-row ${m.gonderenId === myId ? 'mine' : 'theirs'}" style="display:flex; gap:8px; align-items:flex-end;">
-        ${m.gonderenId !== myId ? avatarHtml : ''}
-        <div class="message-bubble ${m.gonderenId === myId ? 'sent' : 'received'}">
-          ${msgHtml}
-          <div class="message-time">${new Date(m.tarih).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</div>
+      <div style="display:flex; gap:10px; margin-bottom:20px; ${isMine ? 'flex-direction:row-reverse; justify-content:flex-start;' : ''}">
+        <!-- Avatar (mesaj balonunun yanında, alt hizalı) -->
+        <div style="flex-shrink:0; width:40px; height:40px; border-radius:50%; overflow:hidden; background:var(--primary-dark); border:2px solid ${isMine ? 'var(--accent)' : '#6366f1'}; align-self:flex-end; margin-bottom:22px;">
+          <img src="${avatar}" style="width:100%; height:100%; object-fit:cover;" alt="${m.gonderenAd || 'Kullanıcı'}" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\\'display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-weight:bold;color:#fff;font-size:1rem;\\'>${initial}</span>';">
+        </div>
+
+        <!-- Mesaj Balonu -->
+        <div style="max-width:75%; min-width:120px;">
+          <!-- Gönderen Adı (balonun üstünde) -->
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:5px; font-weight:500; ${isMine ? 'text-align:right;' : 'text-align:left;'}">
+            ${m.gonderenAd || (isMine ? 'Siz' : 'Avukatınız')}
+          </div>
+
+          <!-- Balon -->
+          <div style="${isMine
+            ? 'background:linear-gradient(135deg, var(--accent), #00b489); color:#000; border-radius:18px 18px 4px 18px;'
+            : 'background:var(--bg-surface); color:var(--text-color); border:1px solid var(--border); border-radius:18px 18px 18px 4px;'
+          } padding:14px 18px; box-shadow:0 2px 10px rgba(0,0,0,0.1); display:inline-block; min-width:80px;">
+            <div style="font-size:0.95rem; line-height:1.5; word-break:break-word;">${msgHtml}</div>
+            <div style="font-size:0.75rem; opacity:0.8; margin-top:8px; text-align:right;">
+              ${new Date(m.tarih).toLocaleTimeString('tr-TR', {hour: '2-digit', minute:'2-digit'})}
+            </div>
+          </div>
         </div>
       </div>`}).join('');
 
@@ -1628,26 +1719,6 @@ window.resetPanelForm = function () {
 // ---- BİLDİRİM SİSTEMİ ----
 // =============================================
 
-async function loadNotifCount() {
-  try {
-    const data = await _apiCall()('GET', '/notifications/count');
-    const badge = document.getElementById('notifBadge');
-    if (!badge) return;
-    if (data.sayi > 0) {
-      badge.textContent = data.sayi > 9 ? '9+' : data.sayi;
-      badge.style.display = 'block';
-      // Hafif titreşim efekti
-      badge.style.animation = 'none';
-      setTimeout(() => { badge.style.animation = ''; }, 10);
-    } else {
-      badge.style.display = 'none';
-    }
-  } catch (e) {
-    // Sessizce yut - bildirim tablosu henüz yoksa hata çıkabilir
-  }
-}
-
-// ---- MESAJ BADGE: Okunmamış sohbet sayısını sidebar'da göster ----
 async function loadMesajBadge() {
   try {
     const token = localStorage.getItem('hp_token');
@@ -1667,93 +1738,10 @@ async function loadMesajBadge() {
       badge.style.display = 'none';
       badge.textContent = '';
     }
-  } catch (e) {
-    // Sessizce yut
-  }
+  } catch (e) { }
 }
 
-window.toggleNotifDropdown = async function () {
-  const dd = document.getElementById('notifDropdown');
-  if (!dd) return;
-  if (dd.style.display === 'none' || !dd.style.display) {
-    dd.style.display = 'block';
-    await loadNotifler();
-  } else {
-    dd.style.display = 'none';
-  }
-};
-
-async function loadNotifler() {
-  const listesi = document.getElementById('notifListesi');
-  if (!listesi) return;
-
-  try {
-    const notifler = await _apiCall()('GET', '/notifications');
-
-    if (!notifler.length) {
-      listesi.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:0.85rem;">
-        <div style="font-size:2rem;margin-bottom:8px;">🔕</div>
-        Henüz bildirim yok
-      </div>`;
-      return;
-    }
-
-    const tipIkonlar = {
-      'AVUKAT_KABUL': '✅',
-      'AVUKAT_VAZGECTI': '⚠️',
-      'GENEL': '🔔'
-    };
-
-    listesi.innerHTML = notifler.map(n => `
-      <div id="notif-${n.id}" onclick="tekBildirimOku('${n.id}', '${n.case_id || ''}')"
-        style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;${n.okundu ? 'opacity:0.6;' : 'background:rgba(0,217,163,0.04);'}"
-        onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='${n.okundu ? 'transparent' : 'rgba(0,217,163,0.04)'}'"
-      >
-        <div style="display:flex;align-items:flex-start;gap:10px;">
-          <div style="font-size:1.3rem;flex-shrink:0;">${tipIkonlar[n.tip] || '🔔'}</div>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:0.85rem;font-weight:${n.okundu ? '500' : '700'};color:var(--text-color);margin-bottom:4px;">${n.baslik}</div>
-            <div style="font-size:0.78rem;color:var(--text-secondary);line-height:1.4;">${n.mesaj}</div>
-            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:6px;">${new Date(n.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
-          </div>
-          ${!n.okundu ? '<div style="width:8px;height:8px;border-radius:50%;background:#00d9a3;flex-shrink:0;margin-top:4px;"></div>' : ''}
-        </div>
-      </div>
-    `).join('');
-  } catch (e) {
-    listesi.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.82rem;">Bildirimler yüklenemedi.</div>`;
-  }
-}
-
-window.tekBildirimOku = async function (notifId, caseId) {
-  try {
-    // Bildirimi okundu işaretle
-    await _apiCall()('PUT', `/notifications/${notifId}/oku`);
-    // Badge'i güncelle
-    await loadNotifCount();
-    // Dropdown'ı kapat
-    const dd = document.getElementById('notifDropdown');
-    if (dd) dd.style.display = 'none';
-    // Eğer ilişkili bir dava varsa davalar bölümüne git ve listeyi yenile
-    if (caseId) {
-      const davaCont = document.getElementById('davalarListesi');
-      if (davaCont) { delete davaCont.dataset.loaded; delete davaCont.dataset.lastHTML; }
-      showSection('davalarim');
-    }
-  } catch (e) {
-    // sessizce yut
-  }
-};
-
-window.tumunuOku = async function () {
-  try {
-    await _apiCall()('PUT', '/notifications/tumunu-oku');
-    await loadNotifCount();
-    await loadNotifler();
-  } catch (e) {
-    // sessizce yut
-  }
-};
+window.showSection = showSection;
 
 
 

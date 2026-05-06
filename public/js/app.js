@@ -554,9 +554,9 @@ window.saveAvatarAndClose = async () => {
     window.selectedAvatarConfig = configStr;
 
     // Sunucuya kaydet
-    const token = localStorage.getItem('token');
+    const token = Auth.getToken(); // Use unified Auth.getToken()
     if (token) {
-        fetch('/api/users/profile', {
+        fetch('/api/auth/profile', { // Corrected endpoint to /api/auth/profile based on usual patterns
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ avatar: dataUrl, avatarConfig: configStr })
@@ -566,5 +566,121 @@ window.saveAvatarAndClose = async () => {
     closeModal('avatarDesignerModal');
     if (window.showToast) showToast('✨ Avatar kaydedildi!', 'success');
 };
+
+// ---- BİLDİRİM SİSTEMİ (UNIFIED) ----
+async function loadNotifCount() {
+    try {
+        const data = await apiCall('GET', '/notifications/count');
+        const badge = document.getElementById('notifBadge');
+        if (!badge) return;
+        const sayi = parseInt(data.sayi) || 0;
+        if (sayi > 0) {
+            badge.textContent = sayi > 9 ? '9+' : sayi;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch (e) { }
+}
+
+async function toggleNotifDropdown() {
+    const dd = document.getElementById('notifDropdown');
+    if (!dd) return;
+    if (dd.style.display === 'none' || !dd.style.display) {
+        dd.style.display = 'block';
+        await loadNotifler();
+    } else {
+        dd.style.display = 'none';
+    }
+}
+
+async function loadNotifler() {
+    const listesi = document.getElementById('notifListesi');
+    if (!listesi) return;
+
+    try {
+        const notifler = await apiCall('GET', '/notifications');
+
+        if (!notifler.length) {
+            listesi.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:0.85rem;">
+                <div style="font-size:2rem;margin-bottom:8px;">🔕</div>
+                Henüz bildirim yok
+            </div>`;
+            return;
+        }
+
+        const tipIkonlar = {
+            'AVUKAT_KABUL': '✅',
+            'AVUKAT_VAZGECTI': '⚠️',
+            'TEKLIF_YENI': '💰',
+            'MESAJ_YENI': '💬',
+            'GENEL': '🔔'
+        };
+
+        listesi.innerHTML = notifler.map(n => `
+            <div id="notif-${n.id}" onclick="tekBildirimOku('${n.id}', '${n.case_id || ''}')"
+                style="padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;${n.okundu ? 'opacity:0.6;' : 'background:rgba(0,217,163,0.04);'}"
+                onmouseover="this.style.background='rgba(255,255,255,0.04)'" onmouseout="this.style.background='${n.okundu ? 'transparent' : 'rgba(0,217,163,0.04)'}'"
+            >
+                <div style="display:flex;align-items:flex-start;gap:10px;">
+                    <div style="font-size:1.3rem;flex-shrink:0;">${tipIkonlar[n.tip] || '🔔'}</div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:0.85rem;font-weight:${n.okundu ? '500' : '700'};color:var(--text-color);margin-bottom:4px;">${n.baslik}</div>
+                        <div style="font-size:0.78rem;color:var(--text-secondary);line-height:1.4;">${n.mesaj}</div>
+                        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:6px;">${new Date(n.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</div>
+                    </div>
+                    ${!n.okundu ? '<div style="width:8px;height:8px;border-radius:50%;background:#00d9a3;flex-shrink:0;margin-top:4px;"></div>' : ''}
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        listesi.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text-muted);font-size:0.82rem;">Bildirimler yüklenemedi.</div>`;
+    }
+}
+
+async function tekBildirimOku(notifId, caseId) {
+    try {
+        await apiCall('PUT', `/notifications/${notifId}/oku`);
+        await loadNotifCount();
+        const dd = document.getElementById('notifDropdown');
+        if (dd) dd.style.display = 'none';
+
+        if (caseId) {
+            const role = Auth.getRole();
+            if (role === 'kullanici' && typeof window.showSection === 'function') {
+                const davaCont = document.getElementById('davalarListesi');
+                if (davaCont) { delete davaCont.dataset.loaded; delete davaCont.dataset.lastHTML; }
+                window.showSection('davalarim');
+            } else if (role === 'avukat' && typeof window.avukatSection === 'function') {
+                window.avukatSection('gelenTalepler');
+            }
+        } else {
+            await loadNotifler();
+        }
+    } catch (e) { }
+}
+
+async function tumunuOku() {
+    try {
+        await apiCall('PUT', '/notifications/tumunu-oku');
+        await loadNotifCount();
+        await loadNotifler();
+    } catch (e) { }
+}
+
+// Global exports
+window.HakPortal = { Auth, apiCall, showToast, showConfirm, openModal, closeModal, formatTL, formatDate, goPanel, logout, loadNotifCount, toggleNotifDropdown, loadNotifler, tekBildirimOku, tumunuOku };
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.showConfirm = showConfirm;
+window.switchTab = switchTab;
+window.goPanel = goPanel;
+window.logout = logout;
+window.toggleMenu = toggleMenu;
+window.loadNotifCount = loadNotifCount;
+window.toggleNotifDropdown = toggleNotifDropdown;
+window.loadNotifler = loadNotifler;
+window.tekBildirimOku = tekBildirimOku;
+window.tumunuOku = tumunuOku;
 
 

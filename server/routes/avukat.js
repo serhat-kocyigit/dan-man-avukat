@@ -84,6 +84,79 @@ router.get('/profil', authMiddleware, roleMiddleware('avukat'), async (req, res)
     }
 });
 
+// ---- PUT /api/avukat/profil - Profil Güncelle ----
+router.put('/profil', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
+    try {
+        const { ad, soyad, unvan, sehir, telefon, bio, baro, baro_no, sicil_no, mezuniyet_yili, deneyim_yil, uzmanlik_alani } = req.body;
+
+        // users tablosunu güncelle
+        const updates = [];
+        const values = [];
+
+        if (ad !== undefined) { updates.push('ad = ?'); values.push(ad); }
+        if (soyad !== undefined) { updates.push('soyad = ?'); values.push(soyad); }
+        if (sehir !== undefined) { updates.push('sehir = ?'); values.push(sehir); }
+        if (telefon !== undefined) { updates.push('telefon = ?'); values.push(telefon); }
+
+        if (updates.length > 0) {
+            values.push(req.user.id);
+            await pool.execute(
+                `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
+                values
+            );
+        }
+
+        // avukat_profiller tablosunu güncelle (varsa)
+        const [profilRows] = await pool.execute(
+            'SELECT id FROM avukat_profiller WHERE user_id = ?',
+            [req.user.id]
+        );
+
+        if (profilRows.length > 0) {
+            const apUpdates = [];
+            const apValues = [];
+            if (unvan !== undefined) { apUpdates.push('unvan = ?'); apValues.push(unvan); }
+            if (bio !== undefined) { apUpdates.push('bio = ?'); apValues.push(bio); }
+            if (baro !== undefined) { apUpdates.push('baro = ?'); apValues.push(baro); }
+            if (baro_no !== undefined) { apUpdates.push('baro_no = ?'); apValues.push(baro_no); }
+            if (sicil_no !== undefined) { apUpdates.push('sicil_no = ?'); apValues.push(sicil_no); }
+            if (mezuniyet_yili !== undefined) { apUpdates.push('mezuniyet_yili = ?'); apValues.push(parseInt(mezuniyet_yili) || null); }
+            if (deneyim_yil !== undefined) { apUpdates.push('deneyim_yil = ?'); apValues.push(parseInt(deneyim_yil) || null); }
+            if (uzmanlik_alani !== undefined) { apUpdates.push('uzmanlik = ?'); apValues.push(JSON.stringify(uzmanlik_alani)); }
+
+            if (apUpdates.length > 0) {
+                apValues.push(req.user.id);
+                await pool.execute(
+                    `UPDATE avukat_profiller SET ${apUpdates.join(', ')} WHERE user_id = ?`,
+                    apValues
+                );
+            }
+        } else if (bio || baro || baro_no || sicil_no || mezuniyet_yili || deneyim_yil || uzmanlik_alani || unvan) {
+            // Yeni profil kaydı oluştur
+            await pool.execute(
+                `INSERT INTO avukat_profiller (user_id, unvan, bio, baro, baro_no, sicil_no, mezuniyet_yili, deneyim_yil, uzmanlik) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    req.user.id,
+                    unvan || 'Av.',
+                    bio || null,
+                    baro || '',
+                    baro_no || '',
+                    sicil_no || null,
+                    parseInt(mezuniyet_yili) || null,
+                    parseInt(deneyim_yil) || null,
+                    uzmanlik_alani ? JSON.stringify(uzmanlik_alani) : null
+                ]
+            );
+        }
+
+        res.json({ success: true, message: 'Profil güncellendi.' });
+    } catch (err) {
+        console.error('avukat profil guncelleme error:', err);
+        res.status(500).json({ error: 'Profil güncellenirken bir sunucu hatası oluştu.' });
+    }
+});
+
 // ---- GET /api/avukat/acik-davalar ----
 router.get('/acik-davalar', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
     try {

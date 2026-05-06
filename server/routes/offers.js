@@ -1,5 +1,9 @@
 // =============================================
-// HakPortal - Offers Route (MySQL)
+// HakPortal - Avukat Listeleme & İletişim Kodu
+// YENİ YASAL MODEL: Avukat teklif yarışması YOK.
+// Platform avukatlara arama/listeleme hizmeti sunar.
+// Kullanıcı avukatı seçer, iletişim kodunu alır,
+// avukata doğrudan ulaşır. Ödeme kullanıcıdan avukata.
 // =============================================
 const express = require('express');
 const router = express.Router();
@@ -7,496 +11,416 @@ const { v4: uuidv4 } = require('uuid');
 const pool = require('../db/pool');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
-const contactPattern = /(\+90|05\d{2}|\b0\d{10}\b|@[^\s]+\.[a-z]{2,}|http[s]?:\/\/|www\.|instagram|telegram|whatsapp|signal)/gi;
+// ---- GET /api/offers/avukatlar - Şehre göre onaylı avukatları listele ----
+// Kullanıcı hesaplama yaptıktan sonra şehirdeki avukatları görür
+router.get('/avukatlar', authMiddleware, async (req, res) => {
+    const { sehir, uzmanlik, caseId } = req.query;
 
-// ---- POST /api/offers - Teklif Ver (Avukat) ----
-router.post('/', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
-    const { caseId, ucretModeli, oran, sabitUcret, onOdeme, tahminiSure, aciklama, kartNo, kartSahibi, sonKullanma, cvv } = req.body;
+    try {
+        const params = [];
+        let talepSubquery = '0 AS talep_sayisi';
+        if (caseId) {
+            talepSubquery = `(SELECT COUNT(*) FROM iletisim_talepleri it 
+                               WHERE it.avukat_id = u.id 
+                               AND it.case_id = ? 
+                               AND it.status != 'IPTAL') AS talep_sayisi`;
+            params.push(caseId);
+        }
 
-    if (!caseId || !ucretModeli || !tahminiSure)
-        return res.status(400).json({ error: 'caseId, ucretModeli ve tahminiSure gerekli.' });
-    if (aciklama && contactPattern.test(aciklama))
-        return res.status(400).json({ error: 'Açıklama alanında iletişim bilgisi kullanılamaz.' });
+        let query = `
+            SELECT
+                u.id,
+                u.ad,
+                u.soyad,
+                u.avatar,
+                u.sehir,
+                ap.unvan,
+                ap.baro,
+                ap.baro_no,
+                ap.mezuniyet_yili,
+                ap.deneyim_yil,
+                ap.bio,
+                ap.uzmanlik,
+                COALESCE(AVG(ay.puan), 0) AS ortalama_puan,
+                COUNT(DISTINCT ay.id) AS yorum_sayisi,
+                ${talepSubquery}
+            FROM users u
+            JOIN avukat_profiller ap ON ap.user_id = u.id
+            LEFT JOIN avukat_yorumlari ay ON ay.avukat_id = u.id
+            WHERE u.role = 'avukat'
+              AND u.is_active = 1
+              AND ap.profil_onay = 1
+        `;
 
-    // Teklif verirken kart bilgisi gerekmiyor, sadece teklif seçildikten sonra ödeme sırasında alınacak.
+        if (sehir && sehir.trim()) {
+            query += ' AND u.sehir LIKE ?';
+            params.push(`%${sehir.trim()}%`);
+        }
+
+        query += ' GROUP BY u.id ORDER BY ortalama_puan DESC, ap.deneyim_yil DESC';
+
+        const [rows] = await pool.execute(query, params);
+
+        const avukatlar = rows.filter(r => {
+            if (!uzmanlik || !uzmanlik.trim()) return true;
+            try {
+                const liste = typeof r.uzmanlik === 'string' ? JSON.parse(r.uzmanlik) : (r.uzmanlik || []);
+                return liste.some(u => u.toLowerCase().includes(uzmanlik.toLowerCase()));
+            } catch { return true; }
+        }).map(r => ({
+            id: r.id,
+            ad: r.ad,
+            soyad: r.soyad,
+            avatar: r.avatar,
+            sehir: r.sehir,
+            unvan: r.unvan,
+            baro: r.baro,
+            baroNo: r.baro_no,
+            mezuniyetYili: r.mezuniyet_yili,
+            deneyimYil: r.deneyim_yil,
+            bio: r.bio,
+            talepGonderildi: r.talep_sayisi > 0,
+            uzmanlik: (() => {
+                try { return typeof r.uzmanlik === 'string' ? JSON.parse(r.uzmanlik) : (r.uzmanlik || []); } catch { return []; }
+            })(),
+            ortalamaPuan: parseFloat(r.ortalama_puan).toFixed(1),
+            yorumSayisi: r.yorum_sayisi
+        }));
+
+        res.json(avukatlar);
+    } catch (err) {
+        console.error('avukatlar listele error:', err);
+        res.status(500).json({ error: 'Avukatlar getirilirken hata.' });
+    }
+});
+
+// ---- GET /api/offers/avukatlar/:id - Avukat detay profili ----
+router.get('/avukatlar/:id', authMiddleware, async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT
+                u.id, u.ad, u.soyad, u.avatar, u.sehir,
+                ap.unvan, ap.baro, ap.baro_no, ap.sicil_no,
+                ap.mezuniyet_yili, ap.deneyim_yil, ap.bio, ap.uzmanlik
+            FROM users u
+            JOIN avukat_profiller ap ON ap.user_id = u.id
+            WHERE u.id = ? AND u.role = 'avukat' AND u.is_active = 1 AND ap.profil_onay = 1
+        `, [req.params.id]);
+
+        if (!rows.length) return res.status(404).json({ error: 'Avukat bulunamadı.' });
+
+        const r = rows[0];
+
+        // Yorumları da getir (anonim)
+        const [yorumlar] = await pool.execute(`
+            SELECT ay.puan, ay.yorum, ay.created_at
+            FROM avukat_yorumlari ay
+            WHERE ay.avukat_id = ?
+            ORDER BY ay.created_at DESC
+            LIMIT 10
+        `, [r.id]);
+
+        res.json({
+            id: r.id,
+            ad: r.ad,
+            soyad: r.soyad,
+            avatar: r.avatar,
+            sehir: r.sehir,
+            unvan: r.unvan,
+            baro: r.baro,
+            baroNo: r.baro_no,
+            sicilNo: r.sicil_no,
+            mezuniyetYili: r.mezuniyet_yili,
+            deneyimYil: r.deneyim_yil,
+            bio: r.bio,
+            uzmanlik: (() => {
+                try { return typeof r.uzmanlik === 'string' ? JSON.parse(r.uzmanlik) : (r.uzmanlik || []); } catch { return []; }
+            })(),
+            yorumlar: yorumlar
+        });
+    } catch (err) {
+        console.error('avukat detay error:', err);
+        res.status(500).json({ error: 'Avukat detayı getirilirken hata.' });
+    }
+});
+
+// ---- POST /api/offers/iletisim-talebi - Avukata iletişim talebi gönder ----
+// Kullanıcı avukat seçer → platforma kayıt olur → avukat e-posta/bildirim alır
+// Avukat direkt kullanıcıya ulaşır. Platform ARACI değil REHBER platformdur.
+router.post('/iletisim-talebi', authMiddleware, roleMiddleware('kullanici'), async (req, res) => {
+    const { avukatId, caseId, not } = req.body;
+
+    if (!avukatId) return res.status(400).json({ error: 'Avukat ID gerekli.' });
+
+    // İletişim notunda telefon/mail yasak
+    const contactPattern = /(\+90|05\d{2}|\b0\d{10}\b|@[^\s]+\.[a-z]{2,}|http[s]?:\/\/|www\.|instagram|telegram|whatsapp)/gi;
+    if (not && contactPattern.test(not)) {
+        return res.status(400).json({ error: 'Not alanında iletişim bilgisi yazılamaz.' });
+    }
 
     const conn = await pool.getConnection();
     try {
         await conn.beginTransaction();
 
-        // Avukat profili onaylı mı?
-        const [profil] = await conn.execute(
-            'SELECT profil_onay FROM avukat_profiller WHERE user_id = ?',
-            [req.user.id]
+        // Avukat var ve onaylı mı?
+        const [avukat] = await conn.execute(
+            `SELECT u.id, u.ad, u.soyad, ap.profil_onay FROM users u
+             JOIN avukat_profiller ap ON ap.user_id = u.id
+             WHERE u.id = ? AND u.is_active = 1 AND ap.profil_onay = 1`,
+            [avukatId]
         );
-        if (!profil.length || !profil[0].profil_onay) { await conn.rollback(); conn.release(); return res.status(403).json({ error: 'Profil onaylı değil. Teklif veremezsiniz.' }); }
+        if (!avukat.length) {
+            await conn.rollback();
+            return res.status(404).json({ error: 'Avukat bulunamadı veya onaylı değil.' });
+        }
 
-        // Dava mevcut mu?
-        const [cases] = await conn.execute(
-            'SELECT id, status, tahmini_alacak FROM cases WHERE id = ?', [caseId]
-        );
-        if (!cases.length || cases[0].status !== 'OPEN') { await conn.rollback(); conn.release(); return res.status(400).json({ error: 'Dava bulunamadı veya açık değil.' }); }
+        // Aynı avukata daha önce talep var mı? (case bazlı)
+        if (caseId) {
+            const [mevcut] = await conn.execute(
+                `SELECT id FROM iletisim_talepleri
+                 WHERE kullanici_id = ? AND avukat_id = ? AND case_id = ? AND status != 'IPTAL'`,
+                [req.user.id, avukatId, caseId]
+            );
+            if (mevcut.length) {
+                await conn.rollback();
+                conn.release();
+                return res.status(409).json({ error: 'Bu avukata bu dosya için zaten talep gönderdiniz.' });
+            }
 
-        const tahminiAlacak = parseFloat(cases[0].tahmini_alacak) || 0;
+            // [DEĞİŞİKLİK] Eskiden burada diğer bekleyen talepler iptal ediliyordu.
+            // Artık kullanıcı birden fazla avukata talep gönderebilir (Yönlendirme/Arama serbestliği).
+            // Diğer talepler ancak bir avukat kabul ettiğinde otomatik iptal edilecek.
+        }
 
-        // Platform bedeli hesapla (avukat ödeyecek)
-        const [settings] = await conn.execute(
-            `SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN
-       ('hizmet_bedeli_0_20','hizmet_bedeli_20_50','hizmet_bedeli_50_plus')`
-        );
-        const s = {};
-        settings.forEach(r => { s[r.setting_key] = parseFloat(r.setting_value); });
-        let platformBedeli = s.hizmet_bedeli_50_plus || 2000;
-        if (tahminiAlacak < 20000) platformBedeli = s.hizmet_bedeli_0_20 || 750;
-        else if (tahminiAlacak < 50000) platformBedeli = s.hizmet_bedeli_20_50 || 1250;
-
-        // Teklif id oluştur ve kaydet
-        const id = uuidv4();
+        const talepId = uuidv4();
         await conn.execute(
-            `INSERT INTO offers (id, case_id, avukat_id, ucret_modeli, oran, sabit_ucret, on_odeme, tahmini_sure, aciklama, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`,
-            [
-                id, caseId, req.user.id,
-                ucretModeli,
-                oran ? parseFloat(oran) : null,
-                sabitUcret ? parseFloat(sabitUcret) : null,
-                onOdeme ? 1 : 0,
-                tahminiSure,
-                aciklama || null
-            ]
+            `INSERT INTO iletisim_talepleri (id, kullanici_id, avukat_id, case_id, not_metni, status)
+             VALUES (?, ?, ?, ?, ?, 'BEKLIYOR')`,
+            [talepId, req.user.id, avukatId, caseId || null, not || null]
         );
 
-        // Teklif verirken ödeme kaydı oluşturulmaz. Ödeme kaydı teklif seçildikten sonra avukat ödeme yaptığında oluşturulacak.
-
-        // Dava teklif sayısını artır
-        await conn.execute(
-            'UPDATE cases SET teklif_sayisi = teklif_sayisi + 1 WHERE id = ?', [caseId]
-        );
+        // Avukata bildirim gönder
+        try {
+            await conn.execute(
+                `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
+                 VALUES (?, ?, 'ILETISIM_TALEBI', '📞 Yeni İletişim Talebi', ?, ?, 0)`,
+                [uuidv4(), avukatId,
+                    `Bir kullanıcı sizinle iletişime geçmek istiyor. Panelden müvekkil taleplerinizi görüntüleyin.`,
+                caseId || null]
+            );
+        } catch (notifErr) {
+            console.warn('Bildirim gönderilemedi:', notifErr.message);
+        }
 
         await conn.commit();
-        conn.release();
-        res.status(201).json({ message: 'Teklifiniz gönderildi.', id });
+        res.status(201).json({
+            message: `${avukat[0].unvan || 'Av.'} ${avukat[0].ad} ${avukat[0].soyad}'a iletişim talebiniz iletildi! Avukatınız en kısa sürede sizinle iletişime geçecektir.`,
+            talepId
+        });
     } catch (err) {
         try { await conn.rollback(); } catch (e) { }
         conn.release();
-        if (err.code === 'ER_DUP_ENTRY')
-            return res.status(409).json({ error: 'Bu davaya zaten teklif verdiniz.' });
-        console.error('offers POST error:', err);
-        res.status(500).json({ error: 'Teklif gönderilirken hata.' });
+        if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ error: 'Bu avukata zaten talep gönderdiniz.' });
+        console.error('iletisim-talebi error:', err);
+        res.status(500).json({ error: 'Talep gönderilirken hata.' });
+    } finally {
+        try { conn.release(); } catch (e) { }
     }
 });
 
-// ---- GET /api/offers/case/:caseId - Teklifleri Listele (Anonim) ----
-router.get('/case/:caseId', authMiddleware, roleMiddleware('kullanici'), async (req, res) => {
+// ---- GET /api/offers/taleplerim - Kullanıcının iletişim talepleri ----
+router.get('/taleplerim', authMiddleware, roleMiddleware('kullanici'), async (req, res) => {
     try {
-        const [cases] = await pool.execute(
-            'SELECT kullanici_id FROM cases WHERE id = ?', [req.params.caseId]
-        );
-        if (!cases.length || cases[0].kullanici_id !== req.user.id)
-            return res.status(403).json({ error: 'Yetkisiz.' });
+        const [rows] = await pool.execute(`
+            SELECT it.*, u.ad, u.soyad, u.avatar, ap.unvan, ap.baro
+            FROM iletisim_talepleri it
+            JOIN users u ON u.id = it.avukat_id
+            JOIN avukat_profiller ap ON ap.user_id = it.avukat_id
+            WHERE it.kullanici_id = ?
+            ORDER BY it.created_at DESC
+        `, [req.user.id]);
 
-        const [rows] = await pool.execute(
-            `SELECT id, ucret_modeli, oran, sabit_ucret, on_odeme, tahmini_sure, aciklama, status, created_at, avukat_id
-       FROM offers WHERE case_id = ? ORDER BY created_at ASC`,
-            [req.params.caseId]
-        );
+        res.json(rows.map(r => ({
+            id: r.id,
+            avukat: { id: r.avukat_id, ad: r.ad, soyad: r.soyad, avatar: r.avatar, unvan: r.unvan, baro: r.baro },
+            caseId: r.case_id,
+            not: r.not_metni,
+            status: r.status,
+            createdAt: r.created_at
+        })));
+    } catch (err) {
+        console.error('taleplerim error:', err);
+        res.status(500).json({ error: 'Talepler getirilirken hata.' });
+    }
+});
 
-        const mappedOffers = await Promise.all(rows.map(async (o, i) => {
-            const [yorums] = await pool.execute(
-                `SELECT puan, yorum, created_at 
-                 FROM avukat_yorumlari 
-                 WHERE avukat_id = ? ORDER BY created_at DESC`,
-                [o.avukat_id]
-            );
+// ---- GET /api/offers/gelen-talepler - Avukata gelen iletişim talepleri ----
+router.get('/gelen-talepler', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
+    try {
+        const [rows] = await pool.execute(`
+            SELECT it.*,
+                u.ad, u.soyad, u.telefon, u.email, u.sehir,
+                c.dava_turu, c.tahmini_alacak, c.skor_toplam,
+                c.skor_hukuki, c.skor_veri, c.skor_tahsil,
+                c.risk_kategorisi, c.risk_notlari, c.ispat_belgeleri,
+                c.hesaplama_verisi
+            FROM iletisim_talepleri it
+            JOIN users u ON u.id = it.kullanici_id
+            LEFT JOIN cases c ON c.id = it.case_id
+            WHERE it.avukat_id = ?
+            ORDER BY it.created_at DESC
+        `, [req.user.id]);
 
-            const ortalamaPuan = yorums.length > 0 ? (yorums.reduce((sum, y) => sum + y.puan, 0) / yorums.length).toFixed(1) : 0;
+        res.json(rows.map(r => {
+            let hesaplamaVerisi = null;
+            let riskNotlari = [];
+            let ispatBelgeleri = [];
+
+            if (r.case_id) {
+                try { hesaplamaVerisi = typeof r.hesaplama_verisi === 'string' ? JSON.parse(r.hesaplama_verisi) : r.hesaplama_verisi; } catch (e) { }
+                try { riskNotlari = typeof r.risk_notlari === 'string' ? JSON.parse(r.risk_notlari) : r.risk_notlari || []; } catch (e) { }
+                try { ispatBelgeleri = typeof r.ispat_belgeleri === 'string' ? JSON.parse(r.ispat_belgeleri) : r.ispat_belgeleri || []; } catch (e) { }
+            }
 
             return {
-                id: o.id,
-                teklifNo: i + 1,
-                ucretModeli: o.ucret_modeli,
-                oran: o.oran,
-                sabitUcret: o.sabit_ucret,
-                onOdeme: !!o.on_odeme,
-                tahminiSure: o.tahmini_sure,
-                aciklama: o.aciklama,
-                status: o.status,
-                createdAt: o.created_at,
-                ortalamaPuan: parseFloat(ortalamaPuan),
-                yorumSayisi: yorums.length,
-                yorumlar: yorums
+                id: r.id,
+                kullanici: {
+                    ad: r.ad,
+                    soyad: r.soyad,
+                    sehir: r.sehir,
+                    telefon: r.status === 'KABUL' ? r.telefon : null,
+                    email: r.status === 'KABUL' ? r.email : null,
+                },
+                dava: r.case_id ? {
+                    davaTuru: r.dava_turu,
+                    tahminiAlacak: parseFloat(r.tahmini_alacak),
+                    skorToplam: r.skor_toplam,
+                    skorHukuki: r.skor_hukuki,
+                    skorVeri: r.skor_veri,
+                    skorTahsil: r.skor_tahsil,
+                    riskKategorisi: r.risk_kategorisi,
+                    riskNotlari: riskNotlari,
+                    ispatBelgeleri: ispatBelgeleri,
+                    hesaplamaVerisi: hesaplamaVerisi
+                } : null,
+                not: r.not_metni,
+                status: r.status,
+                createdAt: r.created_at
             };
         }));
-
-        res.json(mappedOffers);
     } catch (err) {
-        console.error('offers GET case error:', err);
-        res.status(500).json({ error: 'Teklifler getirilirken hata.' });
+        console.error('gelen-talepler error:', err);
+        res.status(500).json({ error: 'Talepler getirilirken hata.' });
     }
 });
 
-// ---- PUT /api/offers/:id/sec - Teklif Seç (Kullanıcı Tarafından) ----
-// Kullanıcı teklif seçince belgeler seçilen avukata açılır
-// Avukat belgeleri inceleyip KABUl ya da VAZGECecek
-router.put('/:id/sec', authMiddleware, roleMiddleware('kullanici'), async (req, res) => {
+// ---- PUT /api/offers/talep/:id/kabul - Avukat iletişim talebini kabul eder ----
+router.put('/talep/:id/kabul', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
     const conn = await pool.getConnection();
     try {
         await conn.beginTransaction();
 
-        const [offers] = await conn.execute(
-            `SELECT o.*, c.kullanici_id, c.tahmini_alacak, c.status as case_status
-       FROM offers o JOIN cases c ON c.id = o.case_id
-       WHERE o.id = ?`,
-            [req.params.id]
+        const [talepler] = await conn.execute(
+            `SELECT * FROM iletisim_talepleri WHERE id = ? AND avukat_id = ?`,
+            [req.params.id, req.user.id]
         );
-        if (!offers.length) { await conn.rollback(); return res.status(404).json({ error: 'Teklif bulunamadı.' }); }
-
-        const offer = offers[0];
-        if (offer.kullanici_id !== req.user.id) { await conn.rollback(); return res.status(403).json({ error: 'Yetkisiz.' }); }
-        if (offer.case_status !== 'OPEN' && offer.case_status !== 'MATCHING') {
-            await conn.rollback(); return res.status(400).json({ error: 'Bu dava için teklif seçilemez.' });
+        if (!talepler.length) {
+            await conn.rollback();
+            return res.status(404).json({ error: 'Talep bulunamadı.' });
+        }
+        if (talepler[0].status !== 'BEKLIYOR') {
+            await conn.rollback();
+            return res.status(400).json({ error: 'Bu talep zaten işleme alınmış.' });
         }
 
-        // Diğer teklifleri reddet
-        await conn.execute('UPDATE offers SET status = "REJECTED" WHERE case_id = ? AND id != ?', [offer.case_id, req.params.id]);
-
-        // Seçilen teklifi işaretle
-        await conn.execute('UPDATE offers SET status = "SELECTED", selected_at = NOW() WHERE id = ?', [req.params.id]);
-
-        // Dava statüsünü MATCHING yap - belgeler seçilen avukata açılacak
         await conn.execute(
-            `UPDATE cases SET status = 'MATCHING', secilen_avukat_id = ?, secilen_teklif_id = ? WHERE id = ?`,
-            [offer.avukat_id, req.params.id, offer.case_id]
+            `UPDATE iletisim_talepleri SET status = 'KABUL' WHERE id = ?`,
+            [req.params.id]
         );
 
-        // Engagement Yarat - Avukat inceleme bekliyor (WAITING_LAWYER_REVIEW)
-        const engagementId = uuidv4();
-        await conn.execute(
-            `INSERT INTO engagements (id, case_id, offer_id, kullanici_id, avukat_id, status)
-             VALUES (?, ?, ?, ?, ?, 'WAITING_LAWYER_REVIEW')`,
-            [engagementId, offer.case_id, req.params.id, offer.kullanici_id, offer.avukat_id]
-        );
+        // [YENİ] Bir avukat kabul ettiğine göre, aynı dava için diğer tüm BEKLEYEN talepleri iptal et
+        if (talepler[0].case_id) {
+            await conn.execute(
+                `UPDATE iletisim_talepleri SET status = 'IPTAL' 
+                 WHERE case_id = ? AND status = 'BEKLIYOR' AND id != ?`,
+                [talepler[0].case_id, req.params.id]
+            );
+        }
 
-        await conn.execute(
-            `INSERT INTO case_status_logs (case_id, status, aciklama, guncelleyen_id, guncelleyen_rol)
-       VALUES (?, 'MATCHING', 'Teklif seçildi. İspat belgeleri avukata açıldı. Avukat inceleme yapıyor.', ?, 'kullanici')`,
-            [offer.case_id, req.user.id]
-        );
-
-        // AVUKATA BİLDİRİM GÖNDER: Teklifiniz seçildi!
+        // Kullanıcıya bildirim: Avukat kabul etti
         try {
             await conn.execute(
                 `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
-                 VALUES (?, ?, 'NEW_OFFER', '🎯 Teklifiniz Seçildi!', ?, ?, 0)`,
-                [uuidv4(), offer.avukat_id,
-                    'Bir müvekkil sizin teklifinizi seçti! Hemen ispat belgelerini inceleyin ve davayı kabul edip etmeyeceğinizi bildirin.',
-                offer.case_id]
+                 VALUES (?, ?, 'AVUKAT_KABUL', '✅ Avukatınız Talebi Kabul Etti!', ?, ?, 0)`,
+                [uuidv4(), talepler[0].kullanici_id,
+                    'Avukatınız iletişim talebinizi kabul etti. Panelinizdeki "Taleplerim" bölümünden avukat iletişim bilgilerine ulaşabilirsiniz.',
+                talepler[0].case_id]
             );
-        } catch (notifErr) {
-            console.warn('Avukat bildirimi eklenemedi:', notifErr.message);
+        } catch (notifErr) { console.warn('Bildirim gönderilemedi:', notifErr.message); }
+
+        // Case varsa statüsünü güncelle
+        if (talepler[0].case_id) {
+            await conn.execute(
+                `UPDATE cases SET status = 'ACTIVE', secilen_avukat_id = ? WHERE id = ?`,
+                [req.user.id, talepler[0].case_id]
+            );
+            await conn.execute(
+                `INSERT INTO case_status_logs (case_id, status, aciklama, guncelleyen_id, guncelleyen_rol)
+                 VALUES (?, 'ACTIVE', 'Avukat iletişim talebini kabul etti. Doğrudan iletişim başladı.', ?, 'avukat')`,
+                [talepler[0].case_id, req.user.id]
+            );
         }
 
         await conn.commit();
-        res.json({ message: 'Teklif seçildi! Avukat belgelerinizi inceleyip onay verecek.', engagementId });
+        res.json({ message: 'İletişim talebi kabul edildi. Kullanıcı bilgilendirildi.' });
     } catch (err) {
-        await conn.rollback();
-        console.error('offers sec error:', err);
-        res.status(500).json({ error: 'Teklif seçilirken hata.' });
+        try { await conn.rollback(); } catch (e) { }
+        console.error('talep kabul error:', err);
+        res.status(500).json({ error: 'İşlem sırasında hata.' });
     } finally {
         conn.release();
     }
 });
 
-// ---- PUT /api/offers/:id/kabul - Avukat Dosyayı Kabul Ediyor ----
-// Avukat belgeleri inceledikten sonra davayı kabul eder
-// Kullanıcıya 99 TL güven bedeli bildirimi gider
-router.put('/:id/kabul', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
+// ---- PUT /api/offers/talep/:id/reddet - Avukat iletişim talebini reddeder ----
+router.put('/talep/:id/reddet', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
     const conn = await pool.getConnection();
     try {
         await conn.beginTransaction();
 
-        // Teklifi ve engagement'u bul
-        const [offers] = await conn.execute(
-            `SELECT o.*, c.kullanici_id, c.status as case_status
-             FROM offers o JOIN cases c ON c.id = o.case_id
-             WHERE o.id = ? AND o.avukat_id = ?`,
+        const [talepler] = await conn.execute(
+            `SELECT * FROM iletisim_talepleri WHERE id = ? AND avukat_id = ?`,
             [req.params.id, req.user.id]
         );
-        if (!offers.length) {
+        if (!talepler.length) {
             await conn.rollback();
-            return res.status(404).json({ error: 'Teklif bulunamadı veya size ait değil.' });
+            return res.status(404).json({ error: 'Talep bulunamadı.' });
         }
 
-        const offer = offers[0];
-        if (offer.status !== 'SELECTED' || offer.case_status !== 'MATCHING') {
-            await conn.rollback();
-            return res.status(400).json({ error: 'Bu dava şu an kabul için uygun değil.' });
-        }
-
-        // En son engagement'u bul
-        const [engs] = await conn.execute(
-            `SELECT * FROM engagements WHERE offer_id = ? AND avukat_id = ? ORDER BY created_at DESC LIMIT 1`,
-            [req.params.id, req.user.id]
-        );
-        if (!engs.length || engs[0].status !== 'WAITING_LAWYER_REVIEW') {
-            await conn.rollback();
-            return res.status(400).json({ error: 'Kabul etmek için uygun aşama değil.' });
-        }
-
-        const engagement = engs[0];
-
-        // Engagement statüsünü WAITING_USER_DEPOSIT yap
         await conn.execute(
-            `UPDATE engagements SET status = 'WAITING_USER_DEPOSIT' WHERE id = ?`,
-            [engagement.id]
-        );
-
-        // Case statüsü MATCHING olarak kalıyor ama log kaydı at
-        await conn.execute(
-            `INSERT INTO case_status_logs (case_id, status, aciklama, guncelleyen_id, guncelleyen_rol)
-             VALUES (?, 'MATCHING', 'Avukat dosyayı inceledi ve kabul etti. Kullanıcıdan 99 TL güven bedeli bekleniyor.', ?, 'avukat')`,
-            [offer.case_id, req.user.id]
-        );
-
-        // Kullanıcıya bildirim gönder: Avukat kabul etti, 99 TL sırası
-        try {
-            await conn.execute(
-                `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
-                 VALUES (?, ?, 'AVUKAT_KABUL', '✅ Avukatınız Dosyanızı Kabul Etti!', ?, ?, 0)`,
-                [uuidv4(), offer.kullanici_id,
-                    'Belgeleri inceleyen avukatınız dosyanızı kabul ederek devam etmek istediğini bildirdi. → Davalarım sayfasından 99 TL güven bedelini ödeyerek süreci başlatın!',
-                offer.case_id]
-            );
-        } catch (notifErr) {
-            console.warn('Bildirim eklenemedi:', notifErr.message);
-        }
-
-        await conn.commit();
-        res.json({ message: 'Dosyayı kabul ettiniz! Kullanıcıya bildirim gönderildi. Güven ödemesini bekliyorsunuz.' });
-    } catch (err) {
-        await conn.rollback();
-        console.error('offers kabul error:', err);
-        res.status(500).json({ error: 'Kabul işlemi sırasında hata.' });
-    } finally {
-        conn.release();
-    }
-});
-
-// ---- POST /api/offers/:id/kullanici-odeme - 99 TL Güven Bedeli ----
-// Avukat kabul ettikten sonra kullanıcı bu ödemeyi yapar
-router.post('/:id/kullanici-odeme', authMiddleware, roleMiddleware('kullanici'), async (req, res) => {
-    const { kartNo, kartSahibi, sonKullanma, cvv } = req.body;
-    if (!kartNo || !kartSahibi || !sonKullanma || !cvv) return res.status(400).json({ error: 'Kart bilgileri eksik.' });
-
-    const conn = await pool.getConnection();
-    try {
-        await conn.beginTransaction();
-
-        const [engs] = await conn.execute(
-            `SELECT * FROM engagements WHERE offer_id = ? AND kullanici_id = ? ORDER BY created_at DESC LIMIT 1`,
-            [req.params.id, req.user.id]
-        );
-        // Avukat'n kabul etmis olmasi gerekiyor (WAITING_USER_DEPOSIT)
-        if (!engs.length || engs[0].status !== 'WAITING_USER_DEPOSIT') {
-            await conn.rollback(); return res.status(400).json({ error: 'Avukat henüz kabul etmedi veya ödeme bekleyen bir işlem yok.' });
-        }
-
-        const engagement = engs[0];
-
-        // 99 TL Ödeme kaydı
-        const paymentId = uuidv4();
-        await conn.execute(
-            `INSERT INTO payments (id, case_id, offer_id, kullanici_id, avukat_id, tutar, kart_son_dort, status)
-             VALUES (?, ?, ?, ?, ?, 99, ?, 'COMPLETED')`,
-            [paymentId, engagement.case_id, req.params.id, req.user.id, engagement.avukat_id, kartNo.slice(-4)]
-        );
-
-        // Engagement ve Case statüsü güncelle
-        await conn.execute(
-            `UPDATE engagements SET status = 'WAITING_LAWYER_PAYMENT', amount_paid_by_user = 99 WHERE id = ?`,
-            [engagement.id]
-        );
-
-        await conn.execute(
-            `UPDATE cases SET status = 'WAITING_LAWYER_PAYMENT' WHERE id = ?`,
-            [engagement.case_id]
-        );
-
-        await conn.execute(
-            `INSERT INTO case_status_logs (case_id, status, aciklama, guncelleyen_id, guncelleyen_rol)
-       VALUES (?, 'WAITING_LAWYER_PAYMENT', 'Kullanıcı 99 TL güven bedelini ödedi. Avukat platform bedeli bekleniyor.', ?, 'kullanici')`,
-            [engagement.case_id, req.user.id]
-        );
-
-        // AVUKATA BİLDİRİM GÖNDER: Güven bedeli ödendi, sıra sizde!
-        try {
-            await conn.execute(
-                `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
-                 VALUES (?, ?, 'GENEL', '💳 Müvekkil Ödemeyi Yaptı!', ?, ?, 0)`,
-                [uuidv4(), engagement.avukat_id,
-                    'Müvekkil 99 TL güven bedelini ödedi. Şimdi sıra sizde! Platform hizmet bedelini ödeyerek süreci başlatabilir ve müvekkil ile mesajlaşmaya başlayabilirsiniz.',
-                engagement.case_id]
-            );
-        } catch (notifErr) {
-            console.warn('Avukat bildirimi eklenemedi:', notifErr.message);
-        }
-
-        await conn.commit();
-        res.json({ message: 'Güven bedeli alındı! Avukatınız platform bedelini ödeyince süreç başlıyor.' });
-    } catch (err) {
-        if (conn) await conn.rollback();
-        res.status(500).json({ error: 'Ödeme sırasında hata.' });
-    } finally {
-        if (conn) conn.release();
-    }
-});
-
-
-// ---- POST /api/offers/:id/avukat-odeme - Avukat Hizmet Bedeli Ödemesi ----
-router.post('/:id/avukat-odeme', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
-    const { kartNo, kartSahibi, sonKullanma, cvv } = req.body;
-    if (!kartNo || !kartSahibi || !sonKullanma || !cvv) return res.status(400).json({ error: 'Kart bilgileri eksik.' });
-
-    const conn = await pool.getConnection();
-    try {
-        await conn.beginTransaction();
-
-        const [engs] = await conn.execute(
-            `SELECT e.*, c.tahmini_alacak FROM engagements e JOIN cases c ON c.id = e.case_id WHERE e.offer_id = ? AND e.avukat_id = ? ORDER BY e.created_at DESC LIMIT 1`,
-            [req.params.id, req.user.id]
-        );
-        if (!engs.length || engs[0].status !== 'WAITING_LAWYER_PAYMENT') {
-            await conn.rollback(); return res.status(400).json({ error: 'Ödeme yapabileceğiniz uygun bir durum yok.' });
-        }
-
-        const engagement = engs[0];
-        const alacak = parseFloat(engagement.tahmini_alacak) || 0;
-
-        // Platform bedeli (Dinamik)
-        const [settings] = await conn.execute(`SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('hizmet_bedeli_0_20','hizmet_bedeli_20_50','hizmet_bedeli_50_plus')`);
-        const s = {}; settings.forEach(r => { s[r.setting_key] = parseFloat(r.setting_value); });
-        let tutar = s.hizmet_bedeli_50_plus || 2000;
-        if (alacak < 20000) tutar = s.hizmet_bedeli_0_20 || 750;
-        else if (alacak < 50000) tutar = s.hizmet_bedeli_20_50 || 1250;
-
-        const paymentId = uuidv4();
-        await conn.execute(
-            `INSERT INTO payments (id, case_id, offer_id, kullanici_id, avukat_id, tutar, kart_son_dort, status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, 'COMPLETED')`,
-            [paymentId, engagement.case_id, req.params.id, engagement.kullanici_id, req.user.id, tutar, kartNo.slice(-4)]
-        );
-
-        // Engagement Status -> PRE_CASE_REVIEW
-        await conn.execute(
-            `UPDATE engagements SET status = 'PRE_CASE_REVIEW', amount_paid_by_lawyer = ? WHERE id = ?`,
-            [tutar, engagement.id]
-        );
-
-        // Case Status -> PRE_CASE_REVIEW
-        await conn.execute(
-            `UPDATE cases SET status = 'PRE_CASE_REVIEW', odeme_id = ? WHERE id = ?`,
-            [paymentId, engagement.case_id]
-        );
-
-        await conn.execute(
-            `INSERT INTO case_status_logs (case_id, status, aciklama, guncelleyen_id, guncelleyen_rol)
-       VALUES (?, 'PRE_CASE_REVIEW', 'Avukat platform bedelini ödedi. Ön inceleme ve anonim iletişim başladı.', ?, 'avukat')`,
-            [engagement.case_id, req.user.id]
-        );
-
-        // Kullanıcıya bildirim gönder: Avukat ödeme yaptı, dosyayı inceliyor
-        try {
-            await conn.execute(
-                `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
-                 VALUES (?, ?, 'AVUKAT_KABUL', '✅ Avukatınız Dosyanızı İnceliyor!', ?, ?, 0)`,
-                [uuidv4(), engagement.kullanici_id,
-                    'Seçtiğiniz avukat platform bedelini ödedi ve dosyanızı incelemeye başladı. Avukat dosyayı inceleyip onaylarsa size bildirim gelecektir.',
-                engagement.case_id]
-            );
-        } catch (notifErr) {
-            console.warn('Bildirim eklenemedi (notifications tablosu eksik olabilir):', notifErr.message);
-        }
-
-        await conn.commit();
-        res.json({ message: 'Ödeme başarılı! Ön inceleme ve anonim mesajlaşma başladı.' });
-    } catch (err) {
-        if (conn) await conn.rollback();
-        console.error('avukat odeme error:', err);
-        res.status(500).json({ error: 'Ödeme sırasında hata.' });
-    } finally {
-        if (conn) conn.release();
-    }
-});
-
-
-
-// ---- PUT /api/offers/:id/vazgec - Avukat Tekliften Vazgeç ----
-router.put('/:id/vazgec', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
-    const conn = await pool.getConnection();
-    try {
-        await conn.beginTransaction();
-
-        const [offers] = await conn.execute(
-            `SELECT o.*, c.status as case_status FROM offers o JOIN cases c ON c.id = o.case_id WHERE o.id = ? AND o.avukat_id = ?`,
-            [req.params.id, req.user.id]
-        );
-        if (!offers.length) { await conn.rollback(); return res.status(404).json({ error: 'Teklif bulunamadı veya size ait değil.' }); }
-
-        const offer = offers[0];
-
-        // Ensure state allows withdrawal (cant withdraw if already in advanced stages)
-        if (['DURUSMA', 'TAHSIL', 'KAPANDI', 'CLOSED', 'CANCELED'].includes(offer.case_status)) {
-            await conn.rollback(); return res.status(400).json({ error: 'Bu aşamada tekliften vazgeçilemez.' });
-        }
-
-        // Cancel the offer
-        await conn.execute('UPDATE offers SET status = "REJECTED_BY_LAWYER" WHERE id = ?', [req.params.id]);
-
-        // Revert case back to OPEN
-        await conn.execute(
-            `UPDATE cases SET status = 'OPEN', secilen_avukat_id = NULL, secilen_teklif_id = NULL WHERE id = ?`,
-            [offer.case_id]
-        );
-
-        // Cancel Engagement
-        await conn.execute(
-            `UPDATE engagements SET status = 'CANCELLED_BY_LAWYER' WHERE offer_id = ?`,
+            `UPDATE iletisim_talepleri SET status = 'REDDEDILDI' WHERE id = ?`,
             [req.params.id]
         );
 
-        await conn.execute(
-            `INSERT INTO case_status_logs (case_id, status, aciklama, guncelleyen_id, guncelleyen_rol)
-       VALUES (?, 'OPEN', 'Avukat tekliften vazgeçti. Dava tekrar tekliflere açıldı.', ?, 'avukat')`,
-            [offer.case_id, req.user.id]
-        );
-
-        // Kullanıcıya bildirim gönder: Avukat vazgeçti
+        // Kullanıcıya bildirim
         try {
-            // Dava sahibini bul
-            const [caseOwner] = await conn.execute(
-                'SELECT kullanici_id FROM cases WHERE id = ?', [offer.case_id]
+            await conn.execute(
+                `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
+                 VALUES (?, ?, 'GENEL', '⚠️ Avukat Şu An Müsait Değil', ?, ?, 0)`,
+                [uuidv4(), talepler[0].kullanici_id,
+                    'Seçtiğiniz avukat şu an yeni müvekkil kabul etmiyor. Diğer avukatlar arasından uygun birini seçebilirsiniz.',
+                talepler[0].case_id]
             );
-            if (caseOwner.length) {
-                await conn.execute(
-                    `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
-                     VALUES (?, ?, 'AVUKAT_VAZGECTI', '⚠️ Avukatınız Dosyadan Vazgeçti', ?, ?, 0)`,
-                    [uuidv4(), caseOwner[0].kullanici_id,
-                        'İnceleme sonucunda seçtiğiniz avukat bu dosyayı üstlenmekten vazgeçti. Davanız tekrar teklif havuzuna alındı. Yeni avukatlardan teklif alabilirsiniz.',
-                    offer.case_id]
-                );
-            }
-        } catch (notifErr) {
-            console.warn('Bildirim eklenemedi (notifications tablosu eksik olabilir):', notifErr.message);
-        }
+        } catch (notifErr) { console.warn('Bildirim gönderilemedi:', notifErr.message); }
 
         await conn.commit();
-        res.json({ message: 'Teklifiniz iptal edildi. Dosya tekrar havuza döndü.' });
+        res.json({ message: 'Talep reddedildi.' });
     } catch (err) {
-        if (conn) await conn.rollback();
-        console.error('vazgec error:', err);
-        res.status(500).json({ error: 'İptal edilirken bir hata oluştu.' });
+        try { await conn.rollback(); } catch (e) { }
+        console.error('talep reddet error:', err);
+        res.status(500).json({ error: 'İşlem sırasında hata.' });
     } finally {
-        if (conn) conn.release();
+        conn.release();
     }
 });
 

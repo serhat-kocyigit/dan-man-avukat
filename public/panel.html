@@ -21,12 +21,14 @@
             <a href="/" class="nav-logo">
                 <span class="logo-icon desktop-logo-icon">⚖️</span>
                 <span class="logo-text">Hak<span class="logo-accent">Portal</span></span>
-                <span class="status-badge status-ACTIVE mobile-avukat-badge" style="background:var(--primary); color:#fff;">Kullanıcı</span>
+                <span class="status-badge status-ACTIVE mobile-avukat-badge"
+                    style="background:var(--primary); color:#fff;">Kullanıcı</span>
             </a>
 
             <div class="nav-links" id="navLinks">
                 <span id="navUserName" style="color:var(--text-secondary);font-size:0.9rem;margin-right:8px;"></span>
-                <span class="status-badge status-ACTIVE desktop-avukat-badge" style="margin-right:12px; background:var(--primary); color:#fff;">Kullanıcı Paneli</span>
+                <span class="status-badge status-ACTIVE desktop-avukat-badge"
+                    style="margin-right:12px; background:var(--primary); color:#fff;">Kullanıcı Paneli</span>
                 <button class="nav-btn-outline" onclick="window.location.href='/'">Ana Sayfa</button>
                 <button class="nav-btn-outline nav-btn-danger" onclick="logout()">Çıkış</button>
             </div>
@@ -71,7 +73,7 @@
 
             <div class="panel-sidebar-title">Menü</div>
             <button class="sidebar-link active" onclick="showSection('davalarim')" id="sidebarDavalarim">
-                📋 Davalarım
+                📋 Hesaplamalarım
             </button>
             <button class="sidebar-link" onclick="showSection('yeniHesaplama')" id="sidebarYeniHesaplama">
                 🧮 Yeni Hesaplama
@@ -118,64 +120,28 @@
                 </div>
             </div>
 
-            <!-- TEKLİFLER (dava seçilince açılır) -->
-            <div id="sectionTeklifler" style="display:none">
+            <!-- AVUKAT BUL -->
+            <div id="sectionAvukatBul" style="display:none">
                 <div class="panel-header">
                     <div>
                         <button class="btn-ghost" onclick="showSection('davalarim')" style="margin-bottom:12px;">←
-                            Davalara Dön</button>
-                        <h1 class="panel-title">Avukat Teklifleri</h1>
-                        <p class="panel-subtitle" id="teklifSubtitle">Anonim teklifleri karşılaştırın ve en uygununu
-                            seçin.</p>
+                            Hesaplamalarıma Dön</button>
+                        <h1 class="panel-title">Avukat Bul</h1>
+                        <p class="panel-subtitle" id="avukatBulSubtitle">Şehrinizdeki uzman avukatları inceleyin ve
+                            iletişime geçin.</p>
                     </div>
                 </div>
-                <div id="tekliflerListesi"></div>
+                <!-- Yasal Bilgi Kutusu -->
+                <div
+                    style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:12px;padding:14px 18px;margin-bottom:20px;font-size:0.83rem;color:var(--text-secondary);line-height:1.6;">
+                    <strong style="color:#10b981;">⚖️ Nasıl Çalışır?</strong> — Beğendiğiniz avukata iletişim talebi
+                    gönderin. Avukat kabul ederse iletişim bilgileri açılır ve doğrudan görüşürsünüz. Vekalet sözleşmesi
+                    ve ücret avukatla aranızda belirlenir.
+                </div>
+                <div id="avukatlarListesi"></div>
             </div>
 
-            <!-- ÖDEME -->
-            <div id="sectionOdeme" style="display:none">
-                <div class="panel-header">
-                    <div>
-                        <button class="btn-ghost" onclick="showSection('teklifler')" style="margin-bottom:12px;">←
-                            Tekliflere Dön</button>
-                        <h1 class="panel-title">Platform Hizmet Bedeli</h1>
-                        <p class="panel-subtitle">Avukat iletişim bilgilerine erişmek için ödeme yapın.</p>
-                    </div>
-                </div>
-                <div class="odeme-wrapper">
-                    <div class="odeme-info-card" id="odemeInfoCard"></div>
-                    <div class="odeme-form-card">
-                        <h3>💳 Kart Bilgileri</h3>
-                        <div class="form-group">
-                            <label class="form-label">Kart Numarası</label>
-                            <input type="text" class="form-input" id="kartNo" placeholder="0000 0000 0000 0000"
-                                maxlength="19" />
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Son Kullanma</label>
-                                <input type="text" class="form-input" id="sonKullanma" placeholder="11 / 32"
-                                    maxlength="7" />
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">CVV</label>
-                                <input type="text" class="form-input" id="cvv" placeholder="123" maxlength="3" />
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Kart Sahibi</label>
-                            <input type="text" class="form-input" id="kartSahibi" placeholder="Ad Soyad" />
-                        </div>
-                        <div class="odeme-disclaimer">
-                            🔒 Ödeme bilgileriniz güvende. Bu sistem sadece MVP demo amaçlıdır.
-                            Gerçek ödeme entegrasyonu için İyzico/Stripe kullanılacaktır.
-                        </div>
-                        <button class="btn-primary btn-block" onclick="doOdeme()" id="odemeBtn">
-                            Ödemeyi Tamamla
-                        </button>
-                    </div>
-                </div>
-            </div>
+
 
             <!-- MESAJLARIM -->
             <div id="sectionMesajlarim" style="display:none">
@@ -186,7 +152,8 @@
                     <div class="empty-state">
                         <div class="empty-icon">💬</div>
                         <div class="empty-title">Henüz mesajınız yok.</div>
-                        <div class="empty-sub">Ödeme tamamlandıktan sonra avukatınızla mesajlaşabilirsiniz.</div>
+                        <div class="empty-sub">Avukat iletişim talebinizi kabul ettikten sonra mesajlaşabilirsiniz.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -513,12 +480,11 @@
     </div>
     <div id="avatarDesignerModal" class="modal-overlay" style="display:none"></div>
 
-    <!-- AVUKAT TEKLİF MODAL PANEL -->
     <div class="modal-overlay" id="teklifModalPanel" style="display:none">
         <div class="modal modal-lg">
             <button class="modal-close" onclick="closeModal('teklifModalPanel')">✕</button>
-            <h3 class="modal-title">⚖️ Avukatlardan Teklif Al</h3>
-            <p class="modal-subtitle">Hesapladığınız davanızı şimdi platformdaki yörenizin avukatlarına doğrudan sunun.
+            <h3 class="modal-title">⚖️ Hesaplamayı Kaydet & Avukat Bul</h3>
+            <p class="modal-subtitle">Hesapladığınız dosyayı kaydedin, şehrinizdeki avukat profillerini inceleyin.
             </p>
             <div class="form-group">
                 <label class="form-label">Dava Türü Seçin</label>
@@ -531,11 +497,12 @@
                 </select>
             </div>
             <div class="modal-info-box">
-                <strong>🔒 Güvence:</strong> Şehir bilginiz doğrudan profilinizden tespit edilir. Kişisel ve iletişim
-                verileriniz avukatlara kesinlikle <u>gösterilmez</u>. Sadece karşılıklı onayda açılır.
+                <strong>🔒 Gizlilik:</strong> Hesaplama kaydedilir. Avukat profillerini inceleyip iletişim talebi
+                gönderirsiniz. Kişisel bilgileriniz yalnızca talep kabul edildiğinde açılır.
             </div>
             <div class="modal-error" id="pTeklifError" style="display:none"></div>
-            <button class="btn-primary btn-block" onclick="goTeklifModalAPI()">Dava Dosyasını Avukatlara Çıkar</button>
+            <button class="btn-primary btn-block" onclick="goTeklifModalAPI()">Hesaplamayı Kaydet & Avukat Bul
+                →</button>
         </div>
     </div>
 

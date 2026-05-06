@@ -97,6 +97,7 @@ app.use('/api/avukat', require('./routes/avukat'));
 app.use('/api/settings', require('./routes/settings'));
 app.use('/api/analyzer', require('./routes/analyzer'));
 app.use('/api/notifications', require('./routes/notifications'));
+app.use('/api/rag', require('./routes/rag'));
 
 // Sayfa rotaları - SPA fallback'ten ÖNCE tanımlanmalı
 app.get('/avukat', (req, res) => res.sendFile(path.join(__dirname, '../public/avukat.html')));

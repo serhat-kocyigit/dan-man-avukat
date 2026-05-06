@@ -1,5 +1,8 @@
 // =============================================
-// HakPortal - Cases Route (MySQL)
+// HakPortal - Cases Route (Yasal Model v2)
+// Davalar = Kullanıcının hesaplama kayıtları.
+// Artık avukatlara "iş ilanı" vermez.
+// Avukat, iletişim talebi kabul ederek dosyaya erişir.
 // =============================================
 const express = require('express');
 const router = express.Router();
@@ -7,22 +10,33 @@ const { v4: uuidv4 } = require('uuid');
 const pool = require('../db/pool');
 const { authMiddleware, roleMiddleware } = require('../middleware/auth');
 
-// Şehir normalize: Dropdown'dan doğru fmt geliyor, trim + ilk harf büyük
-// Eşleşme avukat.js citySlug() ile yapılır
 function normalizeCity(s) {
     if (!s) return '';
     const t = s.trim();
     return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
-// ---- POST /api/cases - Dava Oluştur ----
+// İzin verilen statüsler (yasal modele göre güncellenmiş)
+const ALLOWED_STATUSES = [
+    'KAYITLI', 'AVUKAT_ARANIYOR', 'ACTIVE',
+    'PRE_CASE_REVIEW',      // Avukat evrakları inceliyor
+    'PENDING_USER_AUTH',    // Avukat vekalet istedi, kullanıcı onayı bekleniyor
+    'AUTHORIZED',           // Kullanıcı vekalet verdi
+    'DAVA_NO_BEKLIYOR',     // Avukat mahkeme dosya numarası girdi, kullanıcı doğrulayacak
+    'FILED_IN_COURT',       // Dava mahkemeye açıldı
+    'IN_PROGRESS', 'DURUSMA',
+    'TAHSIL',               // Avukat tahsilat bildirdi, kullanıcı onayı bekleniyor
+    'CLOSED', 'CANCELED'
+];
+
+// ---- POST /api/cases - Hesaplama Kaydet ----
 router.post('/', authMiddleware, roleMiddleware('kullanici'), async (req, res) => {
     const { sehir, davaTuru, tahminilAcak, brutMaas, hesaplamaVerisi, ispatBelgeleri } = req.body;
 
     if (!sehir) return res.status(400).json({ error: 'Şehir gerekli.' });
 
     const id = uuidv4();
-    const normalizedSehir = normalizeCity(sehir); // normalize et
+    const normalizedSehir = normalizeCity(sehir);
     try {
         const skorlar = hesaplamaVerisi?.skorlama || { hukuki: 0, veri: 0, tahsil: 0, toplam: 0, kategori: 'BILINMIYOR', notlar: [] };
 
@@ -32,12 +46,12 @@ router.post('/', authMiddleware, roleMiddleware('kullanici'), async (req, res) =
         }
 
         await pool.execute(
-            `INSERT INTO cases (id, kullanici_id, sehir, dava_turu, tahmini_brut, tahmini_alacak, hesaplama_verisi, status, skor_hukuki, skor_veri, skor_tahsil, skor_toplam, risk_kategorisi, risk_notlari, ispat_belgeleri)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'OPEN', ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO cases (id, kullanici_id, sehir, dava_turu, tahmini_brut, tahmini_alacak,
+             hesaplama_verisi, status, skor_hukuki, skor_veri, skor_tahsil, skor_toplam,
+             risk_kategorisi, risk_notlari, ispat_belgeleri)
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'KAYITLI', ?, ?, ?, ?, ?, ?, ?)`,
             [
-                id,
-                req.user.id,
-                normalizedSehir,
+                id, req.user.id, normalizedSehir,
                 davaTuru || 'kıdem-ihbar',
                 parseFloat(brutMaas) || 0,
                 parseFloat(tahminilAcak) || 0,
@@ -52,153 +66,99 @@ router.post('/', authMiddleware, roleMiddleware('kullanici'), async (req, res) =
             ]
         );
 
-        // Durum logu
         await pool.execute(
             `INSERT INTO case_status_logs (case_id, status, aciklama, guncelleyen_id, guncelleyen_rol)
-       VALUES (?, 'OPEN', 'Dava oluşturuldu.', ?, 'kullanici')`,
+             VALUES (?, 'KAYITLI', 'Hesaplama kaydedildi.', ?, 'kullanici')`,
             [id, req.user.id]
         );
 
-        res.status(201).json({ message: 'Dava oluşturuldu.', case: { id, sehir, status: 'OPEN' } });
-
-        // Şehirdeki avukatlara bildirim gönder: Yeni bir dava var!
-        try {
-            const [avukatlar] = await pool.execute(
-                'SELECT id FROM users WHERE role = "avukat" AND sehir LIKE ?',
-                [`%${normalizedSehir}%`]
-            );
-            for (const av of avukatlar) {
-                await pool.execute(
-                    `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
-                     VALUES (?, ?, 'GENEL', '⚖️ Yeni Dava İlanı!', ?, ?, 0)`,
-                    [uuidv4(), av.id,
-                        `${normalizedSehir} şehrinde yeni bir ${davaTuru || 'işçilik'} davası hesaplandı. Hemen teklif verin!`,
-                    id]
-                );
-            }
-        } catch (notifErr) {
-            console.warn('Avukatlara toplu bildirim gönderilemedi:', notifErr.message);
-        }
+        res.status(201).json({ message: 'Hesaplama kaydedildi.', case: { id, sehir: normalizedSehir, status: 'KAYITLI' } });
     } catch (err) {
         console.error('cases POST error:', err);
-        res.status(500).json({ error: 'Dava oluşturulurken hata.' });
+        res.status(500).json({ error: 'Hesaplama kaydedilirken hata.' });
     }
 });
 
-// ---- GET /api/cases/benim - Kullanıcının Davaları ----
+// ---- GET /api/cases/benim - Kullanıcının Hesaplamaları ----
 router.get('/benim', authMiddleware, roleMiddleware('kullanici'), async (req, res) => {
     try {
         const [rows] = await pool.execute(
             `SELECT
-         c.*,
-         u.ad as selected_avukat_ad, u.soyad as selected_avukat_soyad, u.avatar as selected_avukat_avatar,
-         (SELECT COUNT(*) FROM offers o WHERE o.case_id = c.id) AS teklif_sayisi,
-         (SELECT COUNT(*) FROM offers o WHERE o.case_id = c.id AND o.status = 'PENDING') AS bekleyen_teklif,
-         (SELECT COUNT(*) FROM messages m WHERE m.case_id = c.id AND m.gonderen_id != c.kullanici_id AND m.okundu = 0) AS okunmamis_mesaj,
-         (SELECT aciklama FROM case_status_logs l WHERE l.case_id = c.id AND l.status = 'TAHSIL' ORDER BY l.id DESC LIMIT 1) AS tahsil_log,
-         (SELECT e.status FROM engagements e WHERE e.case_id = c.id ORDER BY e.created_at DESC LIMIT 1) AS engagement_status
-       FROM cases c
-       LEFT JOIN users u ON c.secilen_avukat_id = u.id
-       WHERE c.kullanici_id = ?
-       ORDER BY c.created_at DESC`,
-
+               c.*,
+               u.ad as selected_avukat_ad, u.soyad as selected_avukat_soyad, u.avatar as selected_avukat_avatar,
+               (SELECT COUNT(*) FROM messages m WHERE m.case_id = c.id AND m.gonderen_id != c.kullanici_id AND m.okundu = 0) AS okunmamis_mesaj,
+               (SELECT COUNT(*) FROM iletisim_talepleri it WHERE it.case_id = c.id AND it.status = 'BEKLIYOR') AS bekleyen_talep_sayisi
+             FROM cases c
+             LEFT JOIN users u ON c.secilen_avukat_id = u.id
+             WHERE c.kullanici_id = ?
+             ORDER BY
+               -- 1) Kullanıcı aksiyonu bekleyen davalar (en üstte)
+               CASE WHEN c.status IN ('KAYITLI', 'PENDING_USER_AUTH', 'DAVA_NO_BEKLIYOR', 'TAHSIL') THEN 0
+                    -- 2) Aktif / devam eden davalar (ortada)
+                    WHEN c.status IN ('KAPANDI', 'KAPALI', 'TAMAMLANDI', 'CLOSED') THEN 2
+                    -- 3) Kapalı / tamamlanan davalar (en sonda)
+                    ELSE 1
+               END ASC,
+               -- Aynı kategori içinde en yeniler önce
+               c.created_at DESC`,
             [req.user.id]
         );
 
-        const mappedRows = rows.map(r => ({
+        res.json(rows.map(r => ({
             id: r.id,
             sehir: r.sehir,
             davaTuru: r.dava_turu,
             tahminiAlacak: parseFloat(r.tahmini_alacak),
             status: r.status,
-            teklifSayisi: r.teklif_sayisi,
-            bekleyenTeklif: r.bekleyen_teklif,
             okunmamisMesaj: r.okunmamis_mesaj || 0,
+            bekleyenTalepSayisi: r.bekleyen_talep_sayisi || 0,
             avukatAd: r.selected_avukat_ad,
             avukatSoyad: r.selected_avukat_soyad,
             avukatAvatar: r.selected_avukat_avatar,
-            tahsilAciklama: r.tahsil_log,
-            engagementStatus: r.engagement_status || null,
             davaNo: r.dava_no || null,
-            hesaplamaVerisi: r.hesaplama_verisi ? (typeof r.hesaplama_verisi === 'string' ? JSON.parse(r.hesaplama_verisi) : r.hesaplama_verisi) : null,
+            hesaplamaVerisi: r.hesaplama_verisi
+                ? (typeof r.hesaplama_verisi === 'string' ? JSON.parse(r.hesaplama_verisi) : r.hesaplama_verisi)
+                : null,
             createdAt: r.created_at
-        }));
-
-        const getPriority = (c) => {
-            // Kullanıcı için eylem gerektiren durumlar (Kullanıcının bir şey yapması gerekenler)
-            const isOdemBekliyor = c.status === 'WAITING_USER_DEPOSIT';
-            const isOnayBekliyor = c.status === 'PENDING_USER_AUTH';
-            // Eğer dava açık ve en az 1 bekleyen teklif varsa, kullanıcının teklifleri incelemesi bekleniyor demektir
-            const isSecimBekliyor = c.status === 'OPEN' && c.bekleyenTeklif > 0;
-            
-            if (isOdemBekliyor || isOnayBekliyor || isSecimBekliyor || c.status === 'DAVA_NO_BEKLIYOR') return 1;
-
-            // Kapanan veya iptal olanlar pasif durumda (En sonda yer alacak)
-            const isClosed = ['CLOSED', 'KAPANDI', 'CANCELED'].includes(c.status);
-            if (isClosed) return 3;
-
-            // Diğer tüm bekleyen süreçler (Avukat onayı, Avukat ödemesi, Dava Aktif vb - Ortada yer alacak)
-            return 2;
-        };
-
-        const sortedRows = mappedRows.sort((a, b) => {
-            const pA = getPriority(a);
-            const pB = getPriority(b);
-            if (pA !== pB) return pA - pB; // Özcelik sırası: 1 -> 2 -> 3
-            return new Date(b.createdAt) - new Date(a.createdAt); // Aynı öncelikte en yeni tarihli üstte
-        });
-
-        res.json(sortedRows);
+        })));
     } catch (err) {
         console.error('cases GET benim error:', err);
-        res.status(500).json({ error: 'Davalar getirilirken hata.' });
+        res.status(500).json({ error: 'Hesaplamalar getirilirken hata.' });
     }
 });
 
-
-// ---- GET /api/cases/:id - Dava Detayı ----
+// ---- GET /api/cases/:id - Hesaplama Detayı ----
 router.get('/:id', authMiddleware, async (req, res) => {
     try {
         const [rows] = await pool.execute(
             `SELECT c.*, u.ad, u.soyad, u.avatar, u.email as kullanici_email, u.telefon
-       FROM cases c
-       JOIN users u ON u.id = c.kullanici_id
-       WHERE c.id = ?`,
+             FROM cases c
+             JOIN users u ON u.id = c.kullanici_id
+             WHERE c.id = ?`,
             [req.params.id]
         );
-        if (!rows.length) return res.status(404).json({ error: 'Dava bulunamadı.' });
+        if (!rows.length) return res.status(404).json({ error: 'Hesaplama bulunamadı.' });
 
         const c = rows[0];
-        // Yetki kontrolü: sadece dava sahibi, o davanın avukatı veya admin
+
+        // Yetki: sadece dava sahibi, atanmış avukat veya admin
         if (req.user.role === 'kullanici' && c.kullanici_id !== req.user.id)
             return res.status(403).json({ error: 'Yetkisiz.' });
 
-        // Teklifleri de getir
-        const [teklifler] = await pool.execute(
-            `SELECT o.*, u.ad, u.soyad, u.avatar FROM offers o
-       JOIN users u ON u.id = o.avukat_id
-       WHERE o.id = o.id AND o.case_id = ?`,
-            [c.id]
-        );
+        const isKimlikAcik = ['ACTIVE', 'IN_PROGRESS', 'FILED_IN_COURT', 'DURUSMA', 'TAHSIL', 'CLOSED'].includes(c.status);
 
         let kullaniciBilgi = null;
         let avukatBilgi = null;
 
-        const isKimlikAcik = ['PRE_CASE_REVIEW', 'AUTHORIZED', 'ACTIVE', 'LAWYER_ASSIGNED', 'IN_PROGRESS', 'ILK_GORUSME', 'DAVA_ACILDI', 'FILED_IN_COURT', 'DURUSMA', 'TAHSIL', 'CLOSED', 'KAPANDI'].includes(c.status);
-        const isIletisimAcik = ['FILED_IN_COURT', 'IN_PROGRESS', 'DURUSMA', 'TAHSIL', 'CLOSED', 'KAPANDI'].includes(c.status);
-
+        // Avukat seçildiyse ve durum uygunsa kimlik bilgileri açılır
         if (isKimlikAcik) {
             if (req.user.id === c.secilen_avukat_id || req.user.role === 'admin') {
                 kullaniciBilgi = {
-                    ad: c.ad,
-                    soyad: c.soyad,
-                    avatar: c.avatar,
-                    email: isIletisimAcik ? c.kullanici_email : undefined,
-                    telefon: isIletisimAcik ? c.telefon : undefined
+                    ad: c.ad, soyad: c.soyad, avatar: c.avatar,
+                    email: c.kullanici_email, telefon: c.telefon
                 };
             }
             if (req.user.id === c.kullanici_id || req.user.role === 'admin') {
-                // Seçilen avukat bilgilerini getir
                 const [av] = await pool.execute(
                     `SELECT u.ad, u.soyad, u.avatar, u.email, u.telefon, ap.baro, ap.baro_no
                      FROM users u JOIN avukat_profiller ap ON ap.user_id = u.id
@@ -206,15 +166,7 @@ router.get('/:id', authMiddleware, async (req, res) => {
                     [c.secilen_avukat_id]
                 );
                 if (av.length) {
-                    avukatBilgi = {
-                        ad: av[0].ad,
-                        soyad: av[0].soyad,
-                        avatar: av[0].avatar,
-                        baro: av[0].baro,
-                        baroNo: av[0].baro_no,
-                        email: isIletisimAcik ? av[0].email : undefined,
-                        telefon: isIletisimAcik ? av[0].telefon : undefined
-                    };
+                    avukatBilgi = { ad: av[0].ad, soyad: av[0].soyad, avatar: av[0].avatar, baro: av[0].baro, baroNo: av[0].baro_no, email: av[0].email, telefon: av[0].telefon };
                 }
             }
         }
@@ -225,108 +177,154 @@ router.get('/:id', authMiddleware, async (req, res) => {
             status: c.status, createdAt: c.created_at,
             hesaplamaVerisi: c.hesaplama_verisi,
             kullanici: kullaniciBilgi,
-            avukat: avukatBilgi,
-            teklifler: teklifler.map(t => ({
-                id: t.id, ucretModeli: t.ucret_modeli,
-                oran: t.oran, sabitUcret: t.sabit_ucret,
-                tahminiSure: t.tahmini_sure, status: t.status,
-                avukatAd: t.ad, avukatSoyad: t.soyad
-            }))
+            avukat: avukatBilgi
         });
     } catch (err) {
         console.error('cases GET id error:', err);
-        res.status(500).json({ error: 'Dava detayı getirilirken hata.' });
+        res.status(500).json({ error: 'Detay getirilirken hata.' });
     }
 });
 
-// ---- GET /api/cases/sehir/:sehir - Avukat için şehirdeki davalar ----
-router.get('/sehir/:sehir', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
+// ---- GET /api/cases/avukat/tum-dosyalar - Avukatın tüm müvekkil dosyaları ----
+router.get('/avukat/tum-dosyalar', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
     try {
         const [rows] = await pool.execute(
-            `SELECT
-         c.id, c.sehir, c.dava_turu, c.tahmini_alacak, c.status, c.created_at,
-         (SELECT COUNT(*) FROM offers o WHERE o.case_id = c.id) AS teklif_sayisi,
-         (SELECT COUNT(*) FROM offers o WHERE o.case_id = c.id AND o.avukat_id = ?) AS teklif_verildi
-       FROM cases c
-       WHERE c.sehir LIKE ? AND c.status = 'OPEN'
-       ORDER BY c.created_at DESC`,
-            [req.user.id, `%${req.params.sehir}%`]
+            `SELECT c.*, u.ad as kullanici_ad, u.soyad as kullanici_soyad, u.sehir as kullanici_sehir, u.avatar as kullanici_avatar, u.email as kullanici_email, u.telefon as kullanici_telefon,
+                    (SELECT COUNT(*) FROM messages m WHERE m.case_id = c.id AND m.gonderen_id != ? AND m.okundu = 0) as okunmamis_mesaj
+             FROM cases c
+             JOIN users u ON u.id = c.kullanici_id
+             WHERE c.secilen_avukat_id = ?
+             ORDER BY c.updated_at DESC`,
+            [req.user.id, req.user.id]
         );
 
-        res.json(rows.map(r => ({
-            id: r.id, sehir: r.sehir, davaTuru: r.dava_turu,
-            tahminiAlacak: parseFloat(r.tahmini_alacak),
-            status: r.status, createdAt: r.created_at,
-            teklifSayisi: r.teklif_sayisi,
-            teklifVerildi: r.teklif_verildi > 0
-        })));
+        res.json(rows.map(r => {
+            let hesaplamaVerisi = null;
+            let riskNotlari = [];
+            let ispatBelgeleri = [];
+
+            try { hesaplamaVerisi = typeof r.hesaplama_verisi === 'string' ? JSON.parse(r.hesaplama_verisi) : r.hesaplama_verisi; } catch (e) { }
+            try { riskNotlari = typeof r.risk_notlari === 'string' ? JSON.parse(r.risk_notlari) : r.risk_notlari || []; } catch (e) { }
+            try { ispatBelgeleri = typeof r.ispat_belgeleri === 'string' ? JSON.parse(r.ispat_belgeleri) : r.ispat_belgeleri || []; } catch (e) { }
+
+            return {
+                id: r.id, sehir: r.sehir, davaTuru: r.dava_turu,
+                tahminiAlacak: parseFloat(r.tahmini_alacak),
+                skorToplam: r.skor_toplam,
+                skorHukuki: r.skor_hukuki,
+                skorVeri: r.skor_veri,
+                skorTahsil: r.skor_tahsil,
+                riskKategorisi: r.risk_kategorisi,
+                riskNotlari: riskNotlari,
+                ispatBelgeleri: ispatBelgeleri,
+                hesaplamaVerisi: hesaplamaVerisi,
+                status: r.status, createdAt: r.created_at,
+                okunmamisMesaj: r.okunmamis_mesaj || 0,
+                kullanici: {
+                    ad: r.kullanici_ad, soyad: r.kullanici_soyad,
+                    sehir: r.kullanici_sehir, avatar: r.kullanici_avatar,
+                    email: r.kullanici_email, telefon: r.kullanici_telefon
+                }
+            };
+        }));
     } catch (err) {
-        console.error('cases sehir error:', err);
-        res.status(500).json({ error: 'Davalar getirilirken hata.' });
+        console.error('cases avukat tum-dosyalar error:', err);
+        res.status(500).json({ error: 'Dosyalar getirilirken hata.' });
     }
 });
 
 // ---- PUT /api/cases/:id/status - Durum Güncelle ----
 router.put('/:id/status', authMiddleware, async (req, res) => {
     const { status, aciklama } = req.body;
-    const allowedStatuses = ['OPEN', 'MATCHING', 'WAITING_PAYMENT', 'WAITING_LAWYER_PAYMENT', 'PRE_CASE_REVIEW', 'PENDING_USER_AUTH', 'AUTHORIZED', 'ACTIVE', 'LAWYER_ASSIGNED', 'IN_PROGRESS', 'DAVA_NO_BEKLIYOR', 'FILED_IN_COURT', 'ILK_GORUSME', 'DAVA_ACILDI', 'DURUSMA', 'TAHSIL', 'CLOSED', 'KAPANDI'];
 
-    if (!allowedStatuses.includes(status))
+    if (!ALLOWED_STATUSES.includes(status))
         return res.status(400).json({ error: 'Geçersiz durum.' });
 
     try {
         const [rows] = await pool.execute('SELECT * FROM cases WHERE id = ?', [req.params.id]);
-        if (!rows.length) return res.status(404).json({ error: 'Dava bulunamadı.' });
+        if (!rows.length) return res.status(404).json({ error: 'Hesaplama bulunamadı.' });
         const c = rows[0];
 
-        // Kullanıcı sadece kendi davasını değiştirebilir; avukat aktif davalarını; admin hepsini
         if (req.user.role === 'kullanici' && c.kullanici_id !== req.user.id)
             return res.status(403).json({ error: 'Yetkisiz.' });
         if (req.user.role === 'avukat' && c.secilen_avukat_id !== req.user.id)
             return res.status(403).json({ error: 'Yetkisiz.' });
 
         if (req.body.tahsilat !== undefined && req.body.tahsilat !== null) {
-            await pool.execute('UPDATE cases SET status = ?, gerceklesen_tahsilat = ? WHERE id = ?', [status, parseFloat(req.body.tahsilat), c.id]);
+            await pool.execute('UPDATE cases SET status = ?, gerceklesen_tahsilat = ? WHERE id = ?',
+                [status, parseFloat(req.body.tahsilat), c.id]);
         } else {
             await pool.execute('UPDATE cases SET status = ? WHERE id = ?', [status, c.id]);
         }
+
         await pool.execute(
             `INSERT INTO case_status_logs (case_id, status, aciklama, guncelleyen_id, guncelleyen_rol)
-       VALUES (?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?)`,
             [c.id, status, aciklama || null, req.user.id, req.user.role]
         );
 
-        // AVUKATA BİLDİRİM: Vekalet Onayı veya Dosya Kapanış
-        try {
-            if (status === 'AUTHORIZED' && c.secilen_avukat_id) {
-                await pool.execute(
-                    `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
-                     VALUES (?, ?, 'GENEL', '📄 Vekalet Onaylandı!', ?, ?, 0)`,
-                    [uuidv4(), c.secilen_avukat_id,
-                        'Müvekkil size resmi vekalet verdiğini bildirdi. Artık yargı sürecini başlatabilirsiniz.',
-                    c.id]
-                );
-            } else if (status === 'CLOSED' && c.secilen_avukat_id) {
-                const puan = req.body.puan || '5';
-                await pool.execute(
-                    `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
-                     VALUES (?, ?, 'GENEL', '🏁 Müvekkil Dosyayı Kapattı!', ?, ?, 0)`,
-                    [uuidv4(), c.secilen_avukat_id,
-                        `Müvekkil tahsilatı onayladı ve dosyayı kapattı. Size ${puan}/5 puan verdi!`,
-                    c.id]
-                );
-            }
-        } catch (notifErr) {
-            console.warn('Avukat bildirimi eklenemedi:', notifErr.message);
+        // Eğer kullanıcı durumu KAYITLI'ya çekiyorsa (iptal ediyorsa), tüm bekleyen talepleri IPTAL yap
+        if (status === 'KAYITLI' && req.user.role === 'kullanici') {
+            await pool.execute(
+                `UPDATE iletisim_talepleri SET status = 'IPTAL' WHERE case_id = ? AND status = 'BEKLIYOR'`,
+                [c.id]
+            );
         }
 
-        if (status === 'CLOSED' && req.body.puan && req.body.yorum) {
-            const yId = require('uuid').v4(); // Ensuring we uniquely grab v4 locally if needed
+        // Yorum ekle (CLOSED durumunda)
+        if (status === 'CLOSED' && req.body.puan && req.body.yorum && c.secilen_avukat_id) {
+            const yId = uuidv4();
             await pool.execute(
                 `INSERT INTO avukat_yorumlari (id, case_id, avukat_id, kullanici_id, puan, yorum) VALUES (?, ?, ?, ?, ?, ?)
                  ON DUPLICATE KEY UPDATE puan = ?, yorum = ?`,
                 [yId, c.id, c.secilen_avukat_id, req.user.id, parseInt(req.body.puan), req.body.yorum, parseInt(req.body.puan), req.body.yorum]
-            ).catch(e => console.error("Yorum ekleme hatasi:", e));
+            ).catch(e => console.error('Yorum ekleme hatası:', e));
+
+            // Avukata bildirim
+            try {
+                await pool.execute(
+                    `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
+                     VALUES (?, ?, 'GENEL', '🏁 Dosya Kapandı', ?, ?, 0)`,
+                    [uuidv4(), c.secilen_avukat_id,
+                    `Müvekkil dosyayı kapattı ve size ${req.body.puan}/5 puan verdi.`, c.id]
+                );
+            } catch (e) { console.warn('Bildirim gönderilemedi:', e.message); }
+        }
+
+        // Vekalet istendi → kullanıcıya bildirim
+        if (status === 'PENDING_USER_AUTH' && c.kullanici_id) {
+            try {
+                await pool.execute(
+                    `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
+                     VALUES (?, ?, 'GENEL', '📋 Avukatınız Vekalet İstiyor', ?, ?, 0)`,
+                    [uuidv4(), c.kullanici_id,
+                        'Avukatınız evrakları yeterli buldu ve resmi vekalet talep ediyor. Panele girerek onaylayın.', c.id]
+                );
+            } catch (e) { console.warn('Bildirim gönderilemedi:', e.message); }
+        }
+
+        // Kullanıcı vekalet verdi → avukata bildirim
+        if (status === 'AUTHORIZED' && c.secilen_avukat_id) {
+            try {
+                await pool.execute(
+                    `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
+                     VALUES (?, ?, 'GENEL', '✅ Vekalet Onaylandı!', ?, ?, 0)`,
+                    [uuidv4(), c.secilen_avukat_id,
+                        'Müvekkiliniz resmi vekalet verdi. Artık davayı mahkemeye taşıyabilirsiniz.', c.id]
+                );
+            } catch (e) { console.warn('Bildirim gönderilemedi:', e.message); }
+        }
+
+        // Avukat tahsilat bildirdi → kullanıcıya bildirim
+        if (status === 'TAHSIL' && c.kullanici_id) {
+            try {
+                await pool.execute(
+                    `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
+                     VALUES (?, ?, 'GENEL', '💰 Tahsilat Bildirimi Geldi', ?, ?, 0)`,
+                    [uuidv4(), c.kullanici_id,
+                        `Avukatınız dava sonucunu ve tahsilat bilgisini bildirdi. Lütfen panelden inceleyerek onaylayın.`, c.id]
+                );
+            } catch (e) { console.warn('Bildirim gönderilemedi:', e.message); }
         }
 
         res.json({ message: `Durum güncellendi: ${status}`, status });
@@ -336,102 +334,89 @@ router.put('/:id/status', authMiddleware, async (req, res) => {
     }
 });
 
-// ---- DELETE /api/cases/:id - Dava Sil ----
+// ---- DELETE /api/cases/:id - Hesaplama Sil ----
 router.delete('/:id', authMiddleware, roleMiddleware('kullanici'), async (req, res) => {
     try {
         const [rows] = await pool.execute('SELECT kullanici_id, status FROM cases WHERE id = ?', [req.params.id]);
-        if (!rows.length) return res.status(404).json({ error: 'Dava bulunamadı.' });
+        if (!rows.length) return res.status(404).json({ error: 'Hesaplama bulunamadı.' });
 
         const d = rows[0];
-        if (d.kullanici_id !== req.user.id) {
-            return res.status(403).json({ error: 'Bu ilanı silme yetkiniz yok.' });
-        }
+        if (d.kullanici_id !== req.user.id)
+            return res.status(403).json({ error: 'Bu hesaplamayı silme yetkiniz yok.' });
 
-        if (d.status !== 'OPEN' && d.status !== 'MATCHING') {
-            return res.status(400).json({ error: 'İşlem görmüş veya ödeme aşamasına geçmiş davalar silinemez.' });
-        }
+        if (['IN_PROGRESS', 'FILED_IN_COURT', 'DURUSMA'].includes(d.status))
+            return res.status(400).json({ error: 'Aktif dava sürecindeki hesaplamalar silinemez.' });
 
-        // cascade delete will handle engagements, offers, and case logs due to ibfk constraints,
-        // but we explicitly delete what is safe.
+        // Dava silinmeden önce, bu davaya ait tüm iletişim taleplerini iptal et
+        await pool.execute(
+            `UPDATE iletisim_talepleri SET status = 'IPTAL' WHERE case_id = ?`,
+            [req.params.id]
+        );
+
         await pool.execute('DELETE FROM cases WHERE id = ?', [req.params.id]);
-
-        res.json({ message: 'Dava ilanı başarıyla silindi.' });
+        res.json({ message: 'Hesaplama silindi.' });
     } catch (err) {
         console.error('cases DELETE error:', err);
-        res.status(500).json({ error: 'Dava silinirken sunucu hatası oluştu.' });
+        res.status(500).json({ error: 'Silme sırasında hata.' });
     }
 });
 
-// ---- POST /api/cases/:id/avukat-yorum - Avukat Dosya Tutarlılık Değerlendirmesi ----
+// ---- POST /api/cases/:id/avukat-yorum - Avukat dosya notu ekle ----
 router.post('/:id/avukat-yorum', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
     try {
-        const { id } = req.params;
         const { yorum } = req.body;
+        if (!yorum) return res.status(400).json({ error: 'Not zorunludur.' });
 
-        if (!yorum) return res.status(400).json({ error: 'Lütfen bir değerlendirme yazın.' });
+        const [rows] = await pool.execute('SELECT secilen_avukat_id FROM cases WHERE id = ?', [req.params.id]);
+        if (!rows.length) return res.status(404).json({ error: 'Hesaplama bulunamadı.' });
+        if (rows[0].secilen_avukat_id !== req.user.id)
+            return res.status(403).json({ error: 'Bu dosyaya atanmış avukat değilsiniz.' });
 
-        const [rows] = await pool.execute('SELECT secilen_avukat_id, status FROM cases WHERE id = ?', [id]);
-        if (!rows.length) return res.status(404).json({ error: 'Dava bulunamadı.' });
-
-        const c = rows[0];
-        if (c.secilen_avukat_id !== req.user.id) {
-            return res.status(403).json({ error: 'Geri bildirim yapmak için bu davaya atanmış olmalısınız.' });
-        }
-
-        await pool.execute('UPDATE cases SET avukat_yorumu = ? WHERE id = ?', [yorum, id]);
-
-        res.json({ message: 'Değerlendirmeniz sisteme kaydedildi. Dosya tutarlılığına katkınız için teşekkürler.' });
+        await pool.execute('UPDATE cases SET avukat_yorumu = ? WHERE id = ?', [yorum, req.params.id]);
+        res.json({ message: 'Dosya notunuz kaydedildi.' });
     } catch (err) {
         console.error('avukat-yorum error:', err);
-        res.status(500).json({ error: 'Yorum kaydedilirken bir hata oluştu.' });
+        res.status(500).json({ error: 'Not kaydedilirken hata.' });
     }
 });
 
-// ---- PUT /api/cases/:id/dava-no - Avukat mahkeme dosya numarası girer ----
+// ---- PUT /api/cases/:id/dava-no - Avukat dava numarası girer ----
 router.put('/:id/dava-no', authMiddleware, roleMiddleware('avukat'), async (req, res) => {
     try {
         const { davaNo } = req.body;
-        if (!davaNo || !davaNo.trim()) {
-            return res.status(400).json({ error: 'Mahkeme dosya numarası boş olamaz.' });
-        }
+        if (!davaNo?.trim()) return res.status(400).json({ error: 'Dava numarası boş olamaz.' });
 
         const [rows] = await pool.execute('SELECT * FROM cases WHERE id = ?', [req.params.id]);
-        if (!rows.length) return res.status(404).json({ error: 'Dava bulunamadı.' });
-        const c = rows[0];
+        if (!rows.length) return res.status(404).json({ error: 'Hesaplama bulunamadı.' });
+        if (rows[0].secilen_avukat_id !== req.user.id)
+            return res.status(403).json({ error: 'Bu dosyaya atanmış avukat değilsiniz.' });
 
-        if (c.secilen_avukat_id !== req.user.id) {
-            return res.status(403).json({ error: 'Bu davaya atanmış avukat değilsiniz.' });
-        }
-
-        // Dava no'yu kaydet, durumu DAVA_NO_BEKLIYOR yap (kullanıcı onayı bekleniyor)
         await pool.execute(
             'UPDATE cases SET dava_no = ?, status = ? WHERE id = ?',
-            [davaNo.trim(), 'DAVA_NO_BEKLIYOR', c.id]
+            [davaNo.trim(), 'DAVA_NO_BEKLIYOR', rows[0].id]
         );
 
         await pool.execute(
             `INSERT INTO case_status_logs (case_id, status, aciklama, guncelleyen_id, guncelleyen_rol)
              VALUES (?, 'DAVA_NO_BEKLIYOR', ?, ?, 'avukat')`,
-            [c.id, `Avukat mahkeme dosya numarasını girdi: ${davaNo.trim()} — Kullanıcı onayı bekleniyor.`, req.user.id]
+            [rows[0].id, `Mahkeme dosya numarası girildi, kullanıcı doğrulaması bekleniyor: ${davaNo.trim()}`, req.user.id]
         );
 
-        // Kullanıcıya bildirim gönder
+        // Kullanıcıya bildirim
         try {
             await pool.execute(
                 `INSERT INTO notifications (id, user_id, tip, baslik, mesaj, case_id, okundu)
-                 VALUES (?, ?, 'GENEL', '🏛️ Mahkeme Dosya Numaranız Hazır!', ?, ?, 0)`,
-                [uuidv4(), c.kullanici_id,
-                    `Avukatınız davanız için mahkeme dosya numarasını girdi: ${davaNo.trim()}. Lütfen panelinizdeki davalarım bölümünden numarayı doğrulayıp onaylayın.`,
-                    c.id]
+                 VALUES (?, ?, 'GENEL', '🏗️ Dava Dosya Numarası Geldi!', ?, ?, 0)`,
+                [uuidv4(), rows[0].kullanici_id,
+                `Avukatınız mahkeme dosya numarasını girdi: ${davaNo.trim()}. Lütfen kendi bilgilerinizle doğrulayarak onayla.`,
+                rows[0].id]
             );
-        } catch (notifErr) {
-            console.warn('Kullanıcıya dava no bildirimi gönderilemedi:', notifErr.message);
-        }
+        } catch (e) { console.warn('Bildirim gönderilemedi:', e.message); }
 
-        res.json({ message: 'Mahkeme dosya numarası kaydedildi. Kullanıcı onayı bekleniyor.', davaNo: davaNo.trim() });
+        res.json({ message: 'Dava numarası kaydedildi.', davaNo: davaNo.trim() });
     } catch (err) {
         console.error('dava-no PUT error:', err);
-        res.status(500).json({ error: 'Dosya numarası kaydedilirken hata oluştu.' });
+        res.status(500).json({ error: 'Dava numarası kaydedilirken hata.' });
     }
 });
 
