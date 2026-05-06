@@ -1,44 +1,107 @@
-# HakPortal - İşçi Hakları ve Avukat Eşleştirme Platformu
+# HakPortal - Yapay Zeka Destekli Hukuk ve Avukat Eşleştirme Platformu
 
-![HakPortal Logo](https://via.placeholder.com/800x200.png?text=HakPortal+-+%C4%B0%C5%9F%C3%A7i+Haklar%C4%B1+ve+Avukat+E%C5%9Fle%C5%9Ftirme+Sistemi)
+![HakPortal Banner](https://via.placeholder.com/1000x300.png?text=HakPortal+Legal+AI+Assistant+and+Marketplace)
 
-HakPortal, işçi haklarıyla ilgili uyuşmazlıklar veya alacaklar (örneğin kıdem tazminatı, ihbar tazminatı, fazla mesai) yaşayan işçiler ile bu alanda uzmanlaşmış avukatları bir araya getiren kapalı ve özel bir dijital platformdur. Amacı, adalete erişimi kolaylaştırmak ve hukuki süreçleri dijitalleştirerek şeffaf bir iletişim ve eşleşme sağlamaktır.
-
-## 🚀 Projenin Amacı ve İşlevi
-
-Çoğu işçi, haklarını ararken doğru avukata ulaşmada zorluk çekebilir veya hukuki süreçlerin maliyetleri konusunda öngörülemezlik yaşayabilir. HakPortal bu sorunları çözmek üzere aşağıdaki işlevleri sunar:
-
-1. **Vakaların (Dava Dosyalarının) Dijitalleşmesi**: İşçiler, sorunlarını sisteme detaylarıyla (tahmini alacaklar, belgeler vb.) yükleyerek bir "dosya/case" oluştururlar.
-2. **Akıllı Eşleşme ve Teklif Sistemi**: Sisteme kayıtlı ve onaylı avukatlar, işçilerin anonimleştirilmiş veya temel dosya detaylarını inceleyerek davayı almak için "Teklif" (sabit ücret veya yüzdelik anlaşma) sunarlar.
-3. **Güvenli İletişim**: İşçi ve avukat eşleştikten sonra sistem üzerinden güvenli bir şekilde mesajlaşabilir, belge paylaşımı yapabilirler.
-4. **Süreç Takibi**: Dava/dosya süreçleri (beklemede, avukat atandı, dava açıldı, tahsilat vb.) sistem üzerinden takip edilebilir ve durum güncellemeleri anlık olarak taraflara bildirilir.
-5. **Şeffaf Ödeme ve Geri Bildirim**: Sürecin sonunda veya belirlenen aşamalarda platform üzerinden ödeme/hizmet bedeli işlemleri yönetilir, ayrıca işçiler çalıştıkları avukatları değerlendirebilirler.
-
-## ✨ Temel Özellikler
-
-- **Rol Bazlı Erişim (RBAC)**: Yönetici (Admin), Avukat ve Kullanıcı (İşçi) panellerine özel yetkilendirme mekanizmaları.
-- **Evrak ve Belge Yönetimi:** PDF ve görsel belgelerinin sisteme yüklenmesi ve OCR destekli yapay zeka metin analizi altyapısı.
-- **Gerçek Zamanlıya Yakın Mesajlaşma**: Taraflar arasında güvenli iletişim kanalı.
-- **Kapsamlı Profil ve Onay Mekanizması**: Avukatların baro, sicil numarası ve deneyimlerine göre onay süreçleri.
-- **Dinamik Teklif Modülü**: Sabit veya dava sonucuna dayalı (yüzde) esnek teklif opsiyonları.
-- **Dava Skorlama ve Risk Analizi**: Hukuki alacak, veri skoru ve tahsilat başarı oranı üzerine özgün skorlama mantığı.
-- **Bildirimler**: Aşamalardaki değişikliklerde otomatik kullanıcı bilgilendirmeleri.
+HakPortal; işçi hakları, tazminat hesaplamaları ve hukuki uyuşmazlıklar konusunda uzmanlaşmış, **RAG (Retrieval-Augmented Generation)** teknolojisi ile güçlendirilmiş hibrit bir hukuk platformudur. İşçiler ile uzman avukatları modern bir pazar yerinde buluştururken, taraflara yapay zeka destekli hukuki analiz araçları sunar.
 
 ---
 
-## ⚖️ Yasal Uyarı ve Telif Hakkı (Copyright & Legal Notice)
+## 🌟 Öne Çıkan Özellikler
 
-**© 2024 HakPortal. Tüm Hakları Saklıdır.**
+### 🤖 Gelişmiş Hukuk Asistanı (RAG)
+Sadece genel bir yapay zeka değil, Türkiye Cumhuriyeti mevzuatına ve Yargıtay kararlarına hakim bir asistan:
+- **Mevzuat Analizi:** 700.000+ satırlık mevzuat verisi içinden anlık sorgulama.
+- **Yargıtay Kararları:** Benzer vakalar için emsal kararların tespiti.
+- **Dinamik Sohbet:** Oturum bazlı, geçmişi hatırlayan AI sohbet deneyimi.
+- **Kaynak Gösterimi:** AI yanıtlarında hangi kanun maddesine veya karara dayanıldığının şeffaf gösterimi.
 
-Bu proje, açık kaynaklı (open-source) bir yazılım **değildir**.
-Yazılımın mimarisi, kaynak kodları, veritabanı şemaları, iş mantığı (business logic), algoritma tasarımları ve API yapısı dahil olmak üzere bu depoda (repository) bulunan her türlü materyalin **tüm yasal hakları, mülkiyeti ve fikri hakları proje sahibine (Serhat Koçyiğit) aittir.**
+### ⚖️ Avukat ve Dosya Yönetimi
+- **Vaka Oluşturma:** Kullanıcılar için detaylı dosya (case) açma ve evrak yükleme.
+- **Teklif Sistemi:** Avukatların dosyaları inceleyerek profesyonel teklifler sunması.
+- **Panel Yönetimi:** Avukatlar ve kullanıcılar için ayrı, modern ve kullanıcı dostu kontrol panelleri.
+- **Mesajlaşma:** Dosya bazlı güvenli iletişim kanalı.
 
-Bu projenin;
-- Kısmen veya tamamen kopyalanması (klonlanması),
-- Çoğaltılması,
-- Değiştirilmesi,
-- Dağıtılması,
-- Başka bir projede altyapı olarak kullanılması,
-- Ticari veya kişisel herhangi bir amaçla izinsiz kullanılması
+### 🛡️ Güvenlik ve Altyapı
+- **RBAC (Role-Based Access Control):** Kullanıcı, Avukat ve Admin rolleri için sıkı yetkilendirme.
+- **OCR Desteği:** Yüklenen PDF ve görsel belgelerden otomatik metin çıkarımı.
+- **Güvenli API:** JWT tabanlı kimlik doğrulama ve hız sınırlama (rate-limiting).
 
-**kesinlikle yasaktır.** Aksi davranışlarda bulunanlar hakkında Fikir ve Sanat Eserleri Kanunu ile ilgili diğer yasal mevzuatlar çerçevesinde tüm hukuki, cezai ve tazminat hakları saklıdır.
+---
+
+## 🛠️ Teknoloji Yığını
+
+- **Backend:** [Node.js](https://nodejs.org/) & [Express.js](https://expressjs.com/)
+- **Database:** [MySQL 8.0+](https://www.mysql.com/)
+- **AI Engine:** [Ollama](https://ollama.com/) (Llama 3 / Mistral) & RAG Mimarisi
+- **Frontend:** HTML5, Modern CSS3 (Vanilla), JavaScript (ES6+)
+- **OCR & Parsing:** Tesseract.js & PDF-Parse
+- **Auth:** JSON Web Tokens (JWT) & BCrypt
+
+---
+
+## 🚀 Kurulum ve Başlangıç
+
+### Gereksinimler
+- Node.js (v16+)
+- MySQL
+- Ollama (RAG özellikleri için yerelde çalışıyor olmalıdır)
+
+### 1. Depoyu Klonlayın
+```bash
+git clone https://github.com/serhat-kocyigit/dan-man-avukat.git
+cd dan-man-avukat
+```
+
+### 2. Bağımlılıkları Kurun
+```bash
+npm install
+```
+
+### 3. Ortam Değişkenlerini Ayarlayın
+`.env` dosyasını ana dizinde oluşturun ve aşağıdaki bilgileri projenize göre düzenleyin:
+```env
+PORT=3000
+DB_HOST=localhost
+DB_USER=root
+DB_PASS=şifreniz
+DB_NAME=hakportal
+JWT_SECRET=gizli_anahtar
+RAG_URL=http://localhost:3010/api/chat
+```
+
+### 4. Veritabanı Kurulumu
+SQL şemalarını içe aktarın ve başlangıç verilerini oluşturun:
+```bash
+npm run db:setup
+```
+
+### 5. Uygulamayı Başlatın
+```bash
+npm run dev
+```
+
+---
+
+## 📂 Proje Yapısı
+
+```text
+├── public/             # Frontend dosyaları (HTML, CSS, JS)
+│   ├── js/             # İstemci tarafı mantığı (app.js, panel.js vb.)
+│   └── css/            # Modern UI tasarımları
+├── server/             # Backend (Node.js/Express)
+│   ├── db/             # Veritabanı bağlantısı ve SQL şemaları
+│   ├── middleware/     # Auth ve yetkilendirme katmanları
+│   └── routes/         # API uç noktaları (RAG, Avukat, Dava işlemleri)
+├── .env.example        # Örnek yapılandırma
+└── package.json        # Bağımlılıklar ve scriptler
+```
+
+---
+
+## ⚖️ Yasal Uyarı ve Telif Hakkı
+
+**© 2024-2025 HakPortal. Tüm Hakları Saklıdır.**
+
+Bu proje, açık kaynaklı (open-source) bir yazılım **değildir**. Yazılımın mimarisi, kaynak kodları, veritabanı şemaları ve RAG algoritmaları dahil olmak üzere tüm fikri hakları proje sahibine (**Serhat Koçyiğit**) aittir.
+
+İzinsiz kopyalanması, çoğaltılması veya ticari amaçla kullanılması durumunda yasal işlem başlatılacaktır.
